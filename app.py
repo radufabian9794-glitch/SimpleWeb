@@ -16,7 +16,7 @@ def home():
     return render_template("index.html",
         title="My App",
         name="World",
-        items=["Apples", "Bananas", "Cherries"]
+        items=["Apples", "Bananas", "Cherries", "Muci"]
     )
 
 @app.route("/about")
