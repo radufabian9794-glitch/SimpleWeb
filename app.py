@@ -80,6 +80,10 @@ def register():
  
 @app.route("/login", methods=["POST"])
 def login():
+    if "user_id" in session:
+        flash("You are already logged in.", "success")
+        return render_template("dashboard.html", name=session["user_name"])
+    
     email = request.form.get("email", "").strip().lower()
     password = request.form.get("password", "")
  
