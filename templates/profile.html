@@ -26,11 +26,11 @@
             <h2 id="account-info" style="font-size:1rem;margin:0 0 0.5rem 0">Account</h2>
             <div class="field">
                 <label>Username</label>
-                <input type="text" value="{{ user.username }}" class="readonly" readonly aria-readonly="true">
+                <input type="text" value="{{ name }}" class="readonly" readonly aria-readonly="true">
             </div>
             <div class="field">
                 <label>Email</label>
-                <input type="email" value="{{ user.email }}" class="readonly" readonly aria-readonly="true">
+                <input type="email" value="{{ email }}" class="readonly" readonly aria-readonly="true">
             </div>
         </section>
 
@@ -40,8 +40,6 @@
             <h2 id="password-section" style="font-size:1rem;margin:0 0 0.5rem 0">Change password</h2>
 
             <form id="password-form" method="post" action="/profile/change-password">
-                <!-- If your backend requires CSRF, render the token here, e.g.:
-                         Django: {% csrf_token %} or inject <input type="hidden" name="csrf_token" value="{{ csrf_token }}"> -->
                 <div class="field">
                     <label for="current_password">Current password</label>
                     <input id="current_password" name="current_password" type="password" required autocomplete="current-password">
@@ -80,7 +78,6 @@
                     return;
                 }
 
-                // Optional: client-side strength check (simple)
                 if (newPwd.value.length < 8) {
                     e.preventDefault();
                     msg.textContent = 'New password must be at least 8 characters.';
@@ -88,31 +85,6 @@
                     newPwd.focus();
                     return;
                 }
-
-                // If you prefer AJAX submission instead of normal POST, uncomment and adapt the block below:
-                /*
-                e.preventDefault();
-                fetch(form.action, {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json'},
-                    credentials: 'same-origin',
-                    body: JSON.stringify({
-                        current_password: form.current_password.value,
-                        new_password: newPwd.value,
-                        confirm_password: confirmPwd.value,
-                        csrf_token: form.csrf_token ? form.csrf_token.value : undefined
-                    })
-                }).then(r=>r.json()).then(data=>{
-                    if (data.success) {
-                        msg.textContent = 'Password updated.';
-                        msg.className = 'success';
-                        form.reset();
-                    } else {
-                        msg.textContent = data.error || 'Failed to update password.';
-                        msg.className = 'error';
-                    }
-                }).catch(()=>{ msg.textContent = 'Network error.'; msg.className = 'error'; });
-                */
             });
         })();
     </script>
