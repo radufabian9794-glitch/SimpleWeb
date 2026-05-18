@@ -47,7 +47,7 @@ def auth():
     if "user_id" in session:
         flash("You are already logged in.", "success")
         return render_template("dashboard.html", name=session["user_name"])
-    flash("You are not logged in.", "error")
+    flash("You are not logged in(code: 001).", "error")
     return render_template("auth.html")
  
  
