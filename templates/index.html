@@ -1,12 +1,67 @@
 <!DOCTYPE html>
-<html>
-<head><title>{{ title }}</title></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
 <body>
-  <h1>Hello, {{ name }}!</h1>
-  <ul>
-    {% for item in items %}
-    <li>{{ item }}</li>
-    {% endfor %}
-  </ul>
+ 
+  <nav class="navbar">
+    <a href="/" class="logo">Acme<span>.</span></a>
+    <div class="nav-links">
+      <a href="#">Features</a>
+      <a href="#">Pricing</a>
+      <a href="#">About</a>
+      <a href="{{ url_for('auth') }}" class="btn-login">Sign in / Register</a>
+    </div>
+  </nav>
+ 
+  <header class="hero">
+    <div class="hero-eyebrow">Launching 2025</div>
+    <h1>The better way to<br/><em>build things fast.</em></h1>
+    <p class="hero-sub">Acme helps teams ship products without the usual chaos. From idea to production, everything in one place — no duct tape required.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('auth') }}" class="btn-primary">Get started free</a>
+      <a href="#" class="btn-ghost">Watch demo →</a>
+    </div>
+    <div class="hero-badge">No credit card required</div>
+  </header>
+ 
+  <section class="features">
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Blazing fast</h3>
+      <p>Deploy in seconds, not hours. Our infrastructure handles the heavy lifting so you can focus on what matters.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3>Secure by default</h3>
+      <p>End-to-end encryption, role-based access, and audit logs baked in from day one — not bolted on later.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧩</div>
+      <h3>Works with everything</h3>
+      <p>Native integrations with the tools your team already uses. Slack, GitHub, Jira — you name it, we connect it.</p>
+    </div>
+  </section>
+ 
+  <section class="cta-section">
+    <h2>Ready to get started?</h2>
+    <p>Join thousands of teams already building with Acme.</p>
+    <a href="{{ url_for('auth') }}" class="btn-primary">Create your free account</a>
+  </section>
+ 
+  <footer class="footer">
+    <span>© 2025 Acme Inc.</span>
+    <div class="footer-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Contact</a>
+    </div>
+  </footer>
+ 
 </body>
 </html>

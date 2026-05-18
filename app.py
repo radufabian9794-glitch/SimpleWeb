@@ -13,15 +13,23 @@ class User(db.Model):
 
 @app.route("/")
 def home():
-    return render_template("index.html",
-        title="My App",
-        name="World",
-        items=["Apples", "Bananas", "Cherries", "Muci"]
-    )
+    return render_template("index.html", title="Acme — Build things fast")
+ 
+@app.route("/auth")
+def auth():
+    return render_template("auth.html")
+ 
+# Placeholder routes for the form submissions
+@app.route("/login", methods=["POST"])
+def login():
+    # TODO: handle login logic
+    return "Login submitted"
+ 
+@app.route("/register", methods=["POST"])
+def register():
+    # TODO: handle registration logic
+    return "Registration submitted"
 
-@app.route("/about")
-def about():
-    return "About page"
 
 @app.route("/api/users")
 def users():
