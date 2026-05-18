@@ -8,19 +8,29 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 </head>
 <body class="auth-page">
-
+ 
   <a href="/" class="auth-back">← Back to home</a>
-
+ 
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-wrapper">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+ 
   <div class="auth-container">
     <div class="auth-header">
-      <div class="logo auth-logo">Acme<span>.</span></div>
+      <a href="/" class="logo auth-logo">Acme<span>.</span></a>
       <div class="auth-tabs">
-        <button class="auth-tab active" onclick="showTab('login', this)">Sign in</button>
-        <button class="auth-tab" onclick="showTab('register', this)">Register</button>
+        <button class="auth-tab" id="tab-login" onclick="showTab('login', this)">Sign in</button>
+        <button class="auth-tab" id="tab-register" onclick="showTab('register', this)">Register</button>
       </div>
     </div>
-
-    <div id="login" class="auth-form active">
+ 
+    <div id="login" class="auth-form">
       <form action="/login" method="post">
         <div class="form-group">
           <label for="login-email">Email</label>
@@ -34,7 +44,7 @@
         <button type="submit" class="btn-primary full-width">Sign in</button>
       </form>
     </div>
-
+ 
     <div id="register" class="auth-form">
       <form action="/register" method="post">
         <div class="form-group">
@@ -47,20 +57,28 @@
         </div>
         <div class="form-group">
           <label for="reg-password">Password</label>
-          <input type="password" id="reg-password" name="password" placeholder="Min. 8 characters" required />
+          <input type="password" id="reg-password" name="password" placeholder="Min. 8 characters" required minlength="8" />
         </div>
         <button type="submit" class="btn-primary full-width">Create account</button>
         <p class="auth-note">By creating an account, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
       </form>
     </div>
   </div>
-
+ 
   <script>
     function showTab(tab, btn) {
       document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
       document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
       document.getElementById(tab).classList.add('active');
       btn.classList.add('active');
+    }
+ 
+    // Auto-open the right tab based on URL hash or flash context
+    const hash = window.location.hash;
+    if (hash === '#register') {
+      showTab('register', document.getElementById('tab-register'));
+    } else {
+      showTab('login', document.getElementById('tab-login'));
     }
   </script>
 </body>

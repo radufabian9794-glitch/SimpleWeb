@@ -1,46 +1,114 @@
 import os
-from flask import Flask, jsonify, render_template
-
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
-
+from werkzeug.security import generate_password_hash, check_password_hash
+ 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+    "DATABASE_URL", "postgresql://user:pass@db:5432/mydb"
+)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+ 
 db = SQLAlchemy(app)
-
+ 
+ 
+# ── Models ──────────────────────────────────────────────
 class User(db.Model):
+    __tablename__ = "users"
+ 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-
+    name = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+ 
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+ 
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+ 
+    def __repr__(self):
+        return f"<User {self.email}>"
+ 
+ 
+# ── Routes ───────────────────────────────────────────────
 @app.route("/")
 def home():
     return render_template("index.html", title="Acme — Build things fast")
+ 
  
 @app.route("/auth")
 def auth():
     return render_template("auth.html")
  
-# Placeholder routes for the form submissions
-@app.route("/login", methods=["POST"])
-def login():
-    # TODO: handle login logic
-    return "Login submitted"
  
 @app.route("/register", methods=["POST"])
 def register():
-    # TODO: handle registration logic
-    return "Registration submitted"
-
-
-@app.route("/api/users")
-def users():
-    return jsonify([
-        {"id": 1, "name": "Alice"},
-        {"id": 2, "name": "Bob"}
-    ])
-
-@app.route("/api/users/<int:user_id>")
-def user(user_id):
-    return jsonify({"id": user_id, "name": "Alice"})
-
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+ 
+    if not name or not email or not password:
+        flash("All fields are required.", "error")
+        return redirect(url_for("auth") + "#register")
+ 
+    if len(password) < 8:
+        flash("Password must be at least 8 characters.", "error")
+        return redirect(url_for("auth") + "#register")
+ 
+    if User.query.filter_by(email=email).first():
+        flash("An account with that email already exists.", "error")
+        return redirect(url_for("auth") + "#register")
+ 
+    user = User(name=name, email=email)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+ 
+    session["user_id"] = user.id
+    session["user_name"] = user.name
+ 
+    flash(f"Welcome, {user.name}! Your account has been created.", "success")
+    return redirect(url_for("dashboard"))
+ 
+ 
+@app.route("/login", methods=["POST"])
+def login():
+    email = request.form.get("email", "").strip().lower()
+    password = request.form.get("password", "")
+ 
+    user = User.query.filter_by(email=email).first()
+ 
+    if not user or not user.check_password(password):
+        flash("Invalid email or password.", "error")
+        return redirect(url_for("auth"))
+ 
+    session["user_id"] = user.id
+    session["user_name"] = user.name
+ 
+    flash(f"Welcome back, {user.name}!", "success")
+    return redirect(url_for("dashboard"))
+ 
+ 
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("home"))
+ 
+ 
+@app.route("/dashboard")
+def dashboard():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+    return render_template("dashboard.html", name=session["user_name"])
+ 
+ 
+# ── DB init ──────────────────────────────────────────────
+with app.app_context():
+    db.create_all()
+ 
+ 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
