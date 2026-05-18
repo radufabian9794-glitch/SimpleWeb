@@ -38,7 +38,7 @@ def home():
     if "user_id" in session:
         flash("You are already logged in.", "success")
         return render_template("index.html", title="Acme — Build things fast", name=session["user_name"])
-    flash("You are not logged in.", "error")
+    #flash("You are not logged in.", "error")
     return render_template("index.html", title="Acme — Build things fast")
  
  
