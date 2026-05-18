@@ -12,15 +12,15 @@
   <nav class="navbar">
     <a href="/" class="logo">Acme<span>.</span></a>
     <div class="nav-links">
-      <a href="#">Features</a>
-      <a href="#">Pricing</a>
-      <a href="#">About</a>
-         <a href="#">Blog</a>
-         {% if name %}
+        <a href="#">Features</a>
+        <a href="#">Pricing</a>
+        <a href="#">About</a>
+        <a href="#">Blog</a>
+        {% if name %}
             <span class="nav-user">👋 {{ name }}</span>
             <a href="/logout" class="btn-login">Log out</a>
-         {% else %}
-      <a href="{{ url_for('auth') }}" class="btn-login">Sign in / Register</a>
+        {% else %}
+            <a href="{{ url_for('auth') }}" class="btn-login">Sign in / Register</a>
     </div>
   </nav>
  
