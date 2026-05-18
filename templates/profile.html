@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Profile</title>
+    <style>
+        body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:2rem}
+        .card{max-width:480px;margin:0 auto;padding:1.25rem;border:1px solid #e0e0e0;border-radius:8px}
+        .field{margin-bottom:0.75rem}
+        label{display:block;font-size:0.9rem;margin-bottom:0.25rem}
+        input[type="text"], input[type="email"], input[type="password"]{
+            width:100%;padding:0.5rem;border:1px solid #cfcfcf;border-radius:4px;box-sizing:border-box
+        }
+        .btn{display:inline-block;padding:0.55rem 0.9rem;background:#0078d4;color:#fff;border:none;border-radius:4px;cursor:pointer}
+        .error{color:#c62828;font-size:0.9rem;margin-top:0.5rem}
+        .success{color:#2e7d32;font-size:0.9rem;margin-top:0.5rem}
+        .readonly{background:#f7f7f7}
+    </style>
+</head>
+<body>
+    <main class="card" role="main" aria-labelledby="profile-heading">
+        <h1 id="profile-heading">Your profile</h1>
+
+        <section aria-labelledby="account-info">
+            <h2 id="account-info" style="font-size:1rem;margin:0 0 0.5rem 0">Account</h2>
+            <div class="field">
+                <label>Username</label>
+                <input type="text" value="{{ user.username }}" class="readonly" readonly aria-readonly="true">
+            </div>
+            <div class="field">
+                <label>Email</label>
+                <input type="email" value="{{ user.email }}" class="readonly" readonly aria-readonly="true">
+            </div>
+        </section>
+
+        <hr style="margin:1rem 0">
+
+        <section aria-labelledby="password-section">
+            <h2 id="password-section" style="font-size:1rem;margin:0 0 0.5rem 0">Change password</h2>
+
+            <form id="password-form" method="post" action="/profile/change-password">
+                <!-- If your backend requires CSRF, render the token here, e.g.:
+                         Django: {% csrf_token %} or inject <input type="hidden" name="csrf_token" value="{{ csrf_token }}"> -->
+                <div class="field">
+                    <label for="current_password">Current password</label>
+                    <input id="current_password" name="current_password" type="password" required autocomplete="current-password">
+                </div>
+                <div class="field">
+                    <label for="new_password">New password</label>
+                    <input id="new_password" name="new_password" type="password" required autocomplete="new-password" minlength="8">
+                </div>
+                <div class="field">
+                    <label for="confirm_password">Confirm new password</label>
+                    <input id="confirm_password" name="confirm_password" type="password" required autocomplete="new-password" minlength="8">
+                </div>
+
+                <button type="submit" class="btn">Change password</button>
+                <div id="msg" role="status" aria-live="polite"></div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        (function(){
+            const form = document.getElementById('password-form');
+            const newPwd = document.getElementById('new_password');
+            const confirmPwd = document.getElementById('confirm_password');
+            const msg = document.getElementById('msg');
+
+            form.addEventListener('submit', function(e){
+                msg.textContent = '';
+                msg.className = '';
+
+                if (newPwd.value !== confirmPwd.value) {
+                    e.preventDefault();
+                    msg.textContent = 'New password and confirmation do not match.';
+                    msg.className = 'error';
+                    confirmPwd.focus();
+                    return;
+                }
+
+                // Optional: client-side strength check (simple)
+                if (newPwd.value.length < 8) {
+                    e.preventDefault();
+                    msg.textContent = 'New password must be at least 8 characters.';
+                    msg.className = 'error';
+                    newPwd.focus();
+                    return;
+                }
+
+                // If you prefer AJAX submission instead of normal POST, uncomment and adapt the block below:
+                /*
+                e.preventDefault();
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        current_password: form.current_password.value,
+                        new_password: newPwd.value,
+                        confirm_password: confirmPwd.value,
+                        csrf_token: form.csrf_token ? form.csrf_token.value : undefined
+                    })
+                }).then(r=>r.json()).then(data=>{
+                    if (data.success) {
+                        msg.textContent = 'Password updated.';
+                        msg.className = 'success';
+                        form.reset();
+                    } else {
+                        msg.textContent = data.error || 'Failed to update password.';
+                        msg.className = 'error';
+                    }
+                }).catch(()=>{ msg.textContent = 'Network error.'; msg.className = 'error'; });
+                */
+            });
+        })();
+    </script>
+</body>
+</html>
