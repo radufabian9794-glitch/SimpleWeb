@@ -437,3 +437,142 @@ body {
   color: var(--ink-soft);
   font-size: 1.05rem;
 }
+
+/* ── Overview Page ── */
+.overview-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.card {
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.card h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.card .amount {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  font-family: 'Instrument Serif', serif;
+}
+
+.card.income .amount {
+  color: #2e7d32;
+}
+
+.card.expense .amount {
+  color: #c62828;
+}
+
+.card.remaining .amount {
+  color: #0078d4;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  margin: 2rem 0 1rem 0;
+  font-weight: 600;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.overview-container .form-group input,
+.overview-container .form-group select,
+.overview-container .form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+.overview-container .form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.overview-container .btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: var(--ink);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.overview-container .btn:hover {
+  background: var(--accent-hover);
+}
+
+.transactions-list {
+  margin-top: 2rem;
+}
+
+.transaction-item {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.transaction-info {
+  flex: 1;
+}
+
+.transaction-date {
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+  margin-top: 0.25rem;
+}
+
+.transaction-amount {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.transaction-amount.income {
+  color: #2e7d32;
+}
+
+.transaction-amount.expense {
+  color: #c62828;
+}
+
+.no-transactions {
+  margin-top: 2rem;
+  color: var(--ink-faint);
+}
