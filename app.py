@@ -231,6 +231,53 @@ def add_transaction():
     return redirect(url_for("overview"))
 
 
+@app.route("/transactions/<int:transaction_id>/edit", methods=["GET", "POST"])
+def edit_transaction(transaction_id):
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+
+    transaction = Transaction.query.get(transaction_id)
+    if not transaction or transaction.user_id != session["user_id"]:
+        flash("Transaction not found.", "error")
+        return redirect(url_for("overview"))
+
+    if request.method == "POST":
+        amount = request.form.get("amount", "")
+        date_str = request.form.get("date", "")
+        description = request.form.get("description", "").strip()
+
+        if not amount or not date_str:
+            flash("Amount and date are required.", "error")
+            return redirect(url_for("edit_transaction", transaction_id=transaction_id))
+
+        try:
+            amount = float(amount)
+            if amount <= 0:
+                flash("Amount must be greater than 0.", "error")
+                return redirect(url_for("edit_transaction", transaction_id=transaction_id))
+        except ValueError:
+            flash("Invalid amount.", "error")
+            return redirect(url_for("edit_transaction", transaction_id=transaction_id))
+
+        try:
+            from datetime import datetime
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            flash("Invalid date format.", "error")
+            return redirect(url_for("edit_transaction", transaction_id=transaction_id))
+
+        transaction.amount = amount
+        transaction.date = date_obj
+        transaction.description = description if description else None
+        db.session.commit()
+
+        flash("Transaction updated successfully.", "success")
+        return redirect(url_for("overview"))
+
+    return render_template("edit_transaction.html", transaction=transaction, name=session["user_name"])
+
+
 def change_password():
     if "user_id" not in session:
         flash("Please sign in to continue.", "error")
