@@ -131,6 +131,16 @@ def profile():
         return redirect(url_for("auth"))
     return render_template("profile.html", name=user.name, email=user.email)
 
+@app.route("/profile2")
+def profile2():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+    user = User.query.get(session["user_id"])
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for("auth"))
+    return render_template("profile2.html", name=user.name, email=user.email)
 
 @app.route("/profile/change-password", methods=["POST"])
 def change_password():
