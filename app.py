@@ -30,8 +30,24 @@ class User(db.Model):
  
     def __repr__(self):
         return f"<User {self.email}>"
- 
- 
+
+
+class Transaction(db.Model):
+    __tablename__ = "transactions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    transaction_type = db.Column(db.String(50), nullable=False)  # 'income' or 'expense'
+    date = db.Column(db.Date, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+
+    user = db.relationship("User", backref="transactions")
+
+    def __repr__(self):
+        return f"<Transaction {self.transaction_type} {self.amount}>"
+
+
 # ── Routes ───────────────────────────────────────────────
 @app.route("/")
 def home():
@@ -142,7 +158,79 @@ def profile2():
         return redirect(url_for("auth"))
     return render_template("profile2.html", name=user.name, email=user.email)
 
-@app.route("/profile/change-password", methods=["POST"])
+@app.route("/overview")
+def overview():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+
+    user = User.query.get(session["user_id"])
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for("auth"))
+
+    transactions = Transaction.query.filter_by(user_id=session["user_id"]).all()
+
+    total_income = sum(t.amount for t in transactions if t.transaction_type == "income")
+    total_spend = sum(t.amount for t in transactions if t.transaction_type == "expense")
+    remaining = total_income - total_spend
+
+    return render_template("overview.html", name=user.name,
+                         total_income=total_income,
+                         total_spend=total_spend,
+                         remaining=remaining,
+                         transactions=transactions)
+
+@app.route("/transactions/add", methods=["POST"])
+def add_transaction():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+
+    amount = request.form.get("amount", "")
+    transaction_type = request.form.get("type", "")
+    date_str = request.form.get("date", "")
+    description = request.form.get("description", "").strip()
+
+    if not amount or not transaction_type or not date_str:
+        flash("Amount, type, and date are required.", "error")
+        return redirect(url_for("overview"))
+
+    try:
+        amount = float(amount)
+        if amount <= 0:
+            flash("Amount must be greater than 0.", "error")
+            return redirect(url_for("overview"))
+    except ValueError:
+        flash("Invalid amount.", "error")
+        return redirect(url_for("overview"))
+
+    if transaction_type not in ["income", "expense"]:
+        flash("Invalid transaction type.", "error")
+        return redirect(url_for("overview"))
+
+    try:
+        from datetime import datetime
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        flash("Invalid date format.", "error")
+        return redirect(url_for("overview"))
+
+    transaction = Transaction(
+        user_id=session["user_id"],
+        amount=amount,
+        transaction_type=transaction_type,
+        date=date_obj,
+        description=description if description else None
+    )
+
+    db.session.add(transaction)
+    db.session.commit()
+
+    flash("Transaction added successfully.", "success")
+    return redirect(url_for("overview"))
+
+
 def change_password():
     if "user_id" not in session:
         flash("Please sign in to continue.", "error")

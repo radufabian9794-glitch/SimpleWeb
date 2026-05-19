@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overview</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    .overview-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .card {
+      padding: 1.5rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #f9f9f9;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .card h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.9rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+
+    .card .amount {
+      font-size: 2rem;
+      font-weight: 600;
+      margin: 0;
+      font-family: 'Instrument Serif', serif;
+    }
+
+    .card.income .amount {
+      color: #2e7d32;
+    }
+
+    .card.expense .amount {
+      color: #c62828;
+    }
+
+    .card.remaining .amount {
+      color: #0078d4;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      margin: 2rem 0 1rem 0;
+      font-weight: 600;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #cfcfcf;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: #0078d4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: #005fa3;
+    }
+
+    .transactions-list {
+      margin-top: 2rem;
+    }
+
+    .transaction-item {
+      padding: 1rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .transaction-info {
+      flex: 1;
+    }
+
+    .transaction-date {
+      font-size: 0.85rem;
+      color: #999;
+      margin-top: 0.25rem;
+    }
+
+    .transaction-amount {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .transaction-amount.income {
+      color: #2e7d32;
+    }
+
+    .transaction-amount.expense {
+      color: #c62828;
+    }
+
+    .flash-messages {
+      margin-bottom: 1.5rem;
+    }
+
+    .flash {
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+
+    .flash.error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ef5350;
+    }
+
+    .flash.success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #66bb6a;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/" class="logo">Acme<span>.</span></a>
+    <div class="nav-links">
+      {% if name %}
+        <a href="/profile2"><span class="nav-user">👋 {{ name }}</span></a>
+        <a href="/logout" class="btn-login">Log out</a>
+      {% else %}
+        <a href="{{ url_for('auth') }}" class="btn-login">Sign in / Register</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <div class="overview-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <h1>Spending Overview</h1>
+
+    <div class="cards-grid">
+      <div class="card income">
+        <h3>Total Income</h3>
+        <p class="amount">${{ "%.2f"|format(total_income) }}</p>
+      </div>
+
+      <div class="card expense">
+        <h3>Total Spend</h3>
+        <p class="amount">${{ "%.2f"|format(total_spend) }}</p>
+      </div>
+
+      <div class="card remaining">
+        <h3>Remaining</h3>
+        <p class="amount">${{ "%.2f"|format(remaining) }}</p>
+      </div>
+    </div>
+
+    <h2 class="section-title">Add Transaction</h2>
+    <form method="post" action="/transactions/add">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="type">Type</label>
+          <select id="type" name="type" required>
+            <option value="">Select type</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="amount">Amount</label>
+          <input id="amount" name="amount" type="number" placeholder="0.00" step="0.01" min="0" required>
+        </div>
+
+        <div class="form-group">
+          <label for="date">Date</label>
+          <input id="date" name="date" type="date" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description (optional)</label>
+        <textarea id="description" name="description" placeholder="Add a description..."></textarea>
+      </div>
+
+      <button type="submit" class="btn">Add Transaction</button>
+    </form>
+
+    {% if transactions %}
+      <h2 class="section-title">Recent Transactions</h2>
+      <div class="transactions-list">
+        {% for transaction in transactions | reverse %}
+          <div class="transaction-item">
+            <div class="transaction-info">
+              <div><strong>{{ transaction.transaction_type | capitalize }}</strong></div>
+              {% if transaction.description %}
+                <div>{{ transaction.description }}</div>
+              {% endif %}
+              <div class="transaction-date">{{ transaction.date.strftime('%B %d, %Y') }}</div>
+            </div>
+            <div class="transaction-amount {{ transaction.transaction_type }}">
+              {% if transaction.transaction_type == 'expense' %}
+                -${{ "%.2f"|format(transaction.amount) }}
+              {% else %}
+                +${{ "%.2f"|format(transaction.amount) }}
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="margin-top: 2rem; color: #999;">No transactions yet. Add one to get started!</p>
+    {% endif %}
+  </div>
+
+  <footer class="footer">
+    <span>© 2025 Acme Inc.</span>
+    <div class="footer-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Contact</a>
+    </div>
+  </footer>
+</body>
+</html>
