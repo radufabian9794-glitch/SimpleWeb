@@ -12,8 +12,13 @@
   <nav class="navbar">
     <a href="/" class="logo">Acme<span>.</span></a>
     <div class="nav-links">
-      <span class="nav-user">👋 {{ name }}</span>
-      <a href="/logout" class="btn-login">Log out</a>
+
+        {% if name %}
+            <a href="/profile2"><span class="nav-user">👋 {{ name }}</span></a>
+            <a href="/logout" class="btn-login">Log out</a>
+        {% else %}
+            <a href="{{ url_for('auth') }}" class="btn-login">Sign in / Register</a>
+        {% endif %}
     </div>
   </nav>
  
