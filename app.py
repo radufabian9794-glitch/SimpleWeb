@@ -41,6 +41,7 @@ class Transaction(db.Model):
     transaction_type = db.Column(db.String(50), nullable=False)  # 'income' or 'expense'
     date = db.Column(db.Date, nullable=False)
     description = db.Column(db.String(255), nullable=True)
+    merchant = db.Column(db.String(255), nullable=True)
 
     user = db.relationship("User", backref="transactions")
 
@@ -191,6 +192,7 @@ def add_transaction():
     transaction_type = request.form.get("type", "")
     date_str = request.form.get("date", "")
     description = request.form.get("description", "").strip()
+    merchant = request.form.get("merchant", "").strip()
 
     if not amount or not transaction_type or not date_str:
         flash("Amount, type, and date are required.", "error")
@@ -221,7 +223,8 @@ def add_transaction():
         amount=amount,
         transaction_type=transaction_type,
         date=date_obj,
-        description=description if description else None
+        description=description if description else None,
+        merchant=merchant if merchant else None
     )
 
     db.session.add(transaction)
@@ -247,6 +250,7 @@ def edit_transaction(transaction_id):
         transaction_type = request.form.get("type", "")
         date_str = request.form.get("date", "")
         description = request.form.get("description", "").strip()
+        merchant = request.form.get("merchant", "").strip()
 
         if not amount or not transaction_type or not date_str:
             flash("Amount, type, and date are required.", "error")
@@ -276,6 +280,7 @@ def edit_transaction(transaction_id):
         transaction.transaction_type = transaction_type
         transaction.date = date_obj
         transaction.description = description if description else None
+        transaction.merchant = merchant if merchant else None
         db.session.commit()
 
         flash("Transaction updated successfully.", "success")

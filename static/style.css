@@ -559,6 +559,13 @@ body {
   margin-top: 0.25rem;
 }
 
+.transaction-merchant {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
 .transaction-amount {
   font-weight: 600;
   font-size: 1.1rem;
