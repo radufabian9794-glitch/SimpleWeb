@@ -36,7 +36,7 @@ class User(db.Model):
 @app.route("/")
 def home():
     if "user_id" in session:
-        flash("You are already logged in.", "success")
+        flash("You are already logged in.(code: 001)", "success")
         return render_template("index.html", title="Acme — Build things fast", name=session["user_name"])
     #flash("You are not logged in.", "error")
     return render_template("index.html", title="Acme — Build things fast")
@@ -45,7 +45,7 @@ def home():
 @app.route("/auth")
 def auth():
     if "user_id" in session:
-        flash("You are already logged in.", "success")
+        flash("You are already logged in.(code: 002)", "success")
         return render_template("dashboard.html", name=session["user_name"])
     flash("You are not logged in(code: 001).", "error")
     return render_template("auth.html")
