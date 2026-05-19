@@ -244,11 +244,12 @@ def edit_transaction(transaction_id):
 
     if request.method == "POST":
         amount = request.form.get("amount", "")
+        transaction_type = request.form.get("type", "")
         date_str = request.form.get("date", "")
         description = request.form.get("description", "").strip()
 
-        if not amount or not date_str:
-            flash("Amount and date are required.", "error")
+        if not amount or not transaction_type or not date_str:
+            flash("Amount, type, and date are required.", "error")
             return redirect(url_for("edit_transaction", transaction_id=transaction_id))
 
         try:
@@ -260,6 +261,10 @@ def edit_transaction(transaction_id):
             flash("Invalid amount.", "error")
             return redirect(url_for("edit_transaction", transaction_id=transaction_id))
 
+        if transaction_type not in ["income", "expense"]:
+            flash("Invalid transaction type.", "error")
+            return redirect(url_for("edit_transaction", transaction_id=transaction_id))
+
         try:
             from datetime import datetime
             date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -268,6 +273,7 @@ def edit_transaction(transaction_id):
             return redirect(url_for("edit_transaction", transaction_id=transaction_id))
 
         transaction.amount = amount
+        transaction.transaction_type = transaction_type
         transaction.date = date_obj
         transaction.description = description if description else None
         db.session.commit()
