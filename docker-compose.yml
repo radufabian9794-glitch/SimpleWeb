@@ -10,6 +10,7 @@ services:
       - web
   web:
     build: .
+    image: simpleweb:v0.0.2
     env_file:
       - .env
     ports:
