@@ -325,6 +325,13 @@ def change_password():
 # ── DB init ──────────────────────────────────────────────
 with app.app_context():
     db.create_all()
+
+    # Add merchant column if it doesn't exist
+    try:
+        db.session.execute("ALTER TABLE transactions ADD COLUMN merchant VARCHAR(255)")
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
  
  
 if __name__ == "__main__":
