@@ -8,6 +8,14 @@ services:
       - ./static:/app/static:ro
     depends_on:
       - web
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
   web:
     build: .
     image: simpleweb:v0.0.2
@@ -19,6 +27,14 @@ services:
       - db
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/mydb
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   db:
     image: postgres:15
@@ -28,6 +44,14 @@ services:
       - POSTGRES_DB=mydb
     volumes:
       - db_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
 volumes:
   db_data:
