@@ -114,7 +114,7 @@ def login():
  
     if not user or not user.check_password(password):
         flash("Invalid email or password.", "error")
-        return redirect(url_for("auth"))
+        return render_template("auth.html", login_email=email)
  
     session["user_id"] = user.id
     session["user_name"] = user.name

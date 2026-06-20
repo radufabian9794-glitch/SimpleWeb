@@ -34,7 +34,7 @@
       <form action="/login" method="post">
         <div class="form-group">
           <label for="login-email">Email</label>
-          <input type="email" id="login-email" name="email" placeholder="you@example.com" required />
+          <input type="email" id="login-email" name="email" value="{{ login_email or '' }}" placeholder="you@example.com" required />
         </div>
         <div class="form-group">
           <label for="login-password">Password</label>
