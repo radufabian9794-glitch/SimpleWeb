@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
  
 app = Flask(__name__)
@@ -326,12 +327,21 @@ def change_password():
 with app.app_context():
     db.create_all()
 
-    # Add merchant column if it doesn't exist
-    try:
-        db.session.execute("ALTER TABLE transactions ADD COLUMN merchant VARCHAR(255)")
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
+    inspector = db.inspect(db.engine)
+    existing_columns = {column["name"] for column in inspector.get_columns("transactions")}
+
+    # Ensure transaction columns exist for older databases.
+    for column_name, column_sql in [
+        ("description", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS description VARCHAR(255)"),
+        ("merchant", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS merchant VARCHAR(255)"),
+    ]:
+        if column_name not in existing_columns:
+            try:
+                db.session.execute(text(column_sql))
+                db.session.commit()
+                existing_columns.add(column_name)
+            except Exception:
+                db.session.rollback()
  
  
 if __name__ == "__main__":
