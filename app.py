@@ -1,7 +1,6 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
  
 app = Flask(__name__)
@@ -31,23 +30,6 @@ class User(db.Model):
  
     def __repr__(self):
         return f"<User {self.email}>"
-
-
-class Transaction(db.Model):
-    __tablename__ = "transactions"
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    amount = db.Column(db.Float, nullable=False)
-    transaction_type = db.Column(db.String(50), nullable=False)  # 'income' or 'expense'
-    date = db.Column(db.Date, nullable=False)
-    description = db.Column(db.String(255), nullable=True)
-    merchant = db.Column(db.String(255), nullable=True)
-
-    user = db.relationship("User", backref="transactions")
-
-    def __repr__(self):
-        return f"<Transaction {self.transaction_type} {self.amount}>"
 
 
 # ── Routes ───────────────────────────────────────────────
@@ -160,136 +142,7 @@ def profile2():
         return redirect(url_for("auth"))
     return render_template("profile2.html", name=user.name, email=user.email)
 
-@app.route("/overview")
-def overview():
-    if "user_id" not in session:
-        flash("Please sign in to continue.", "error")
-        return redirect(url_for("auth"))
-
-    user = User.query.get(session["user_id"])
-    if not user:
-        flash("User not found.", "error")
-        return redirect(url_for("auth"))
-
-    transactions = Transaction.query.filter_by(user_id=session["user_id"]).all()
-
-    total_income = sum(t.amount for t in transactions if t.transaction_type == "income")
-    total_spend = sum(t.amount for t in transactions if t.transaction_type == "expense")
-    remaining = total_income - total_spend
-
-    return render_template("overview.html", name=user.name,
-                         total_income=total_income,
-                         total_spend=total_spend,
-                         remaining=remaining,
-                         transactions=transactions)
-
-@app.route("/transactions/add", methods=["POST"])
-def add_transaction():
-    if "user_id" not in session:
-        flash("Please sign in to continue.", "error")
-        return redirect(url_for("auth"))
-
-    amount = request.form.get("amount", "")
-    transaction_type = request.form.get("type", "")
-    date_str = request.form.get("date", "")
-    description = request.form.get("description", "").strip()
-    merchant = request.form.get("merchant", "").strip()
-
-    if not amount or not transaction_type or not date_str:
-        flash("Amount, type, and date are required.", "error")
-        return redirect(url_for("overview"))
-
-    try:
-        amount = float(amount)
-        if amount <= 0:
-            flash("Amount must be greater than 0.", "error")
-            return redirect(url_for("overview"))
-    except ValueError:
-        flash("Invalid amount.", "error")
-        return redirect(url_for("overview"))
-
-    if transaction_type not in ["income", "expense"]:
-        flash("Invalid transaction type.", "error")
-        return redirect(url_for("overview"))
-
-    try:
-        from datetime import datetime
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
-    except ValueError:
-        flash("Invalid date format.", "error")
-        return redirect(url_for("overview"))
-
-    transaction = Transaction(
-        user_id=session["user_id"],
-        amount=amount,
-        transaction_type=transaction_type,
-        date=date_obj,
-        description=description if description else None,
-        merchant=merchant if merchant else None
-    )
-
-    db.session.add(transaction)
-    db.session.commit()
-
-    flash("Transaction added successfully.", "success")
-    return redirect(url_for("overview"))
-
-
-@app.route("/transactions/<int:transaction_id>/edit", methods=["GET", "POST"])
-def edit_transaction(transaction_id):
-    if "user_id" not in session:
-        flash("Please sign in to continue.", "error")
-        return redirect(url_for("auth"))
-
-    transaction = Transaction.query.get(transaction_id)
-    if not transaction or transaction.user_id != session["user_id"]:
-        flash("Transaction not found.", "error")
-        return redirect(url_for("overview"))
-
-    if request.method == "POST":
-        amount = request.form.get("amount", "")
-        transaction_type = request.form.get("type", "")
-        date_str = request.form.get("date", "")
-        description = request.form.get("description", "").strip()
-        merchant = request.form.get("merchant", "").strip()
-
-        if not amount or not transaction_type or not date_str:
-            flash("Amount, type, and date are required.", "error")
-            return redirect(url_for("edit_transaction", transaction_id=transaction_id))
-
-        try:
-            amount = float(amount)
-            if amount <= 0:
-                flash("Amount must be greater than 0.", "error")
-                return redirect(url_for("edit_transaction", transaction_id=transaction_id))
-        except ValueError:
-            flash("Invalid amount.", "error")
-            return redirect(url_for("edit_transaction", transaction_id=transaction_id))
-
-        if transaction_type not in ["income", "expense"]:
-            flash("Invalid transaction type.", "error")
-            return redirect(url_for("edit_transaction", transaction_id=transaction_id))
-
-        try:
-            from datetime import datetime
-            date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
-        except ValueError:
-            flash("Invalid date format.", "error")
-            return redirect(url_for("edit_transaction", transaction_id=transaction_id))
-
-        transaction.amount = amount
-        transaction.transaction_type = transaction_type
-        transaction.date = date_obj
-        transaction.description = description if description else None
-        transaction.merchant = merchant if merchant else None
-        db.session.commit()
-
-        flash("Transaction updated successfully.", "success")
-        return redirect(url_for("overview"))
-
-    return render_template("edit_transaction.html", transaction=transaction, name=session["user_name"])
-
-
+@app.route("/profile/change-password", methods=["POST"])
 def change_password():
     if "user_id" not in session:
         flash("Please sign in to continue.", "error")
@@ -326,22 +179,6 @@ def change_password():
 # ── DB init ──────────────────────────────────────────────
 with app.app_context():
     db.create_all()
-
-    inspector = db.inspect(db.engine)
-    existing_columns = {column["name"] for column in inspector.get_columns("transactions")}
-
-    # Ensure transaction columns exist for older databases.
-    for column_name, column_sql in [
-        ("description", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS description VARCHAR(255)"),
-        ("merchant", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS merchant VARCHAR(255)"),
-    ]:
-        if column_name not in existing_columns:
-            try:
-                db.session.execute(text(column_sql))
-                db.session.commit()
-                existing_columns.add(column_name)
-            except Exception:
-                db.session.rollback()
  
  
 if __name__ == "__main__":
