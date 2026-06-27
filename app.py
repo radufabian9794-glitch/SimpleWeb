@@ -12,6 +12,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
  
 db = SQLAlchemy(app)
  
+ site_title = "SimpleWeb"
  
 # ── Models ──────────────────────────────────────────────
 class User(db.Model):
@@ -37,9 +38,9 @@ class User(db.Model):
 def home():
     if "user_id" in session:
         #flash("You are already logged in.(code: 001)", "success")
-        return render_template("index.html", title="Acme — Build things fast", name=session["user_name"])
+        return render_template("index.html", title=site_title, name=session["user_name"])
     #flash("You are not logged in.", "error")
-    return render_template("index.html", title="Acme — Build things fast")
+    return render_template("index.html", title=site_title)
  
  
 @app.route("/auth")
@@ -48,8 +49,7 @@ def auth():
         flash("You are already logged in.(code: 002)", "success")
         return render_template("dashboard.html", name=session["user_name"])
     #flash("You are not logged in(code: Auth 001).", "error")
-    return render_template("auth.html")
- 
+    return render_template("auth.html", title=site_title)
  
 @app.route("/register", methods=["POST"])
 def register():
@@ -97,7 +97,7 @@ def login():
  
     if not user or not user.check_password(password):
         flash("Invalid email or password.", "error")
-        return render_template("auth.html", login_email=email)
+        return render_template("auth.html", title=site_title, login_email=email)
  
     session["user_id"] = user.id
     session["user_name"] = user.name
@@ -117,7 +117,7 @@ def dashboard():
     if "user_id" not in session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-    return render_template("dashboard.html", name=session["user_name"])
+    return render_template("dashboard.html", title=site_title, name=session["user_name"])
 
 
 @app.route("/profile")
@@ -129,7 +129,7 @@ def profile():
     if not user:
         flash("User not found.", "error")
         return redirect(url_for("auth"))
-    return render_template("profile.html", name=user.name, email=user.email)
+    return render_template("profile.html", title=site_title, name=user.name, email=user.email)
 
 @app.route("/profile2")
 def profile2():
@@ -140,7 +140,7 @@ def profile2():
     if not user:
         flash("User not found.", "error")
         return redirect(url_for("auth"))
-    return render_template("profile2.html", name=user.name, email=user.email)
+    return render_template("profile2.html", title=site_title, name=user.name, email=user.email)
 
 @app.route("/profile/change-password", methods=["POST"])
 def change_password():
