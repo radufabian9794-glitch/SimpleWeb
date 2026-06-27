@@ -13,7 +13,7 @@
           <a href="/logout" class="btn-login">Log out</a>
         </div>
       </div>
-    {% else %}
+    {% elif not maintenance_enabled %}
       <a href="{{ url_for('auth') }}" class="btn-login">Sign in / Register</a>
     {% endif %}
   </div>
