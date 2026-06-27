@@ -12,7 +12,11 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
  
 db = SQLAlchemy(app)
  
-site_title = "SimpleWeb"
+site_title = "SimpleWeb" #for easy text replacement in templates
+site_email_info = "info@simpleweb.com" #for easy text replacement in templates
+site_email_support = "support@simpleweb.com" #for easy text replacement in templates
+site_email_privacy = "privacy@simpleweb.com" #for easy text replacement in templates
+site_url = "https://www.simpleweb.com" #for easy text replacement in templates
  
 # ── Models ──────────────────────────────────────────────
 class User(db.Model):
