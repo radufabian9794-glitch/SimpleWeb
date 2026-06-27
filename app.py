@@ -181,18 +181,18 @@ def change_password():
  
 @app.route('/privacy')
 def privacy():
-    return render_template('privacy.html', title=site_title)
+    return render_template('privacy.html', title=site_title , site_email_privacy=site_email_privacy)
 
 @app.route('/terms')
 def terms():
-    return render_template('terms.html', title=site_title)
+    return render_template('terms.html', title=site_title , site_email_info=site_email_info)
 
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
         # Handle form submission here
         pass
-    return render_template('contact.html', title=site_title)
+    return render_template('contact.html', title=site_title , site_email_info=site_email_info)
 # ── DB init ──────────────────────────────────────────────
 with app.app_context():
     db.create_all()
