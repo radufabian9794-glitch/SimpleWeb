@@ -119,6 +119,9 @@ def home():
  
 @app.route("/auth")
 def auth():
+    if maintenance_enabled():
+        flash("The site is currently under maintenance. Please try again later.", "error")
+        return redirect(url_for("maintenance_page"))
     if "user_id" in session:
         flash("You are already logged in.(code: 002)", "success")
         return render_template("dashboard.html", name=session["user_name"] )
