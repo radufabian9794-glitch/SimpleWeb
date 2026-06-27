@@ -101,6 +101,7 @@ img, svg {
 .nav-user-dropdown a {
   padding: 0.6rem 0.9rem;
   white-space: nowrap;
+  color: red;
 } 
  .nav-user-dropdown-options{
   color: green;
