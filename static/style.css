@@ -102,6 +102,10 @@ img, svg {
   padding: 0.6rem 0.9rem;
   white-space: nowrap;
 } */
+ .nav-user-dropdown-options.a{
+  color: green;
+
+ }
  
 .nav-user-menu.is-open .nav-user-dropdown {
   display: flex;
