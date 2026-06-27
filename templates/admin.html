@@ -26,6 +26,12 @@
           Allow logins
         </label>
       </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" name="maintenance_mode" {% if maintenance_enabled %}checked{% endif %}>
+          Enable maintenance mode
+        </label>
+      </div>
       <button type="submit" class="btn-primary">Save Settings</button>
     </form>
   </main>

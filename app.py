@@ -71,13 +71,42 @@ def login_enabled():
     return get_setting("login_enabled", "1") == "1"
 
 
+def maintenance_enabled():
+    return get_setting("maintenance_mode", "0") == "1"
+
+
 @app.context_processor
 def inject_user_context():
     return {
         "is_admin": bool(session.get("user_admin", 0)),
         "registration_enabled": registration_enabled(),
         "login_enabled": login_enabled(),
+        "maintenance_enabled": maintenance_enabled(),
     }
+
+
+@app.before_request
+def enforce_maintenance():
+    if not maintenance_enabled():
+        return None
+
+    if request.path.startswith("/static/"):
+        return None
+
+    if request.path in ["/maintenance", "/logout"]:
+        return None
+
+    if request.path == "/auth" and request.method == "GET":
+        return None
+
+    if request.path == "/login" and request.method == "POST":
+        return None
+
+    if bool(session.get("user_admin", 0)):
+        return None
+
+    return redirect(url_for("maintenance_page"))
+
 
 @app.route("/")
 def home():
@@ -204,8 +233,10 @@ def admin_page():
     if request.method == "POST":
         registration_enabled_value = request.form.get("registration_enabled") == "on"
         login_enabled_value = request.form.get("login_enabled") == "on"
+        maintenance_enabled_value = request.form.get("maintenance_mode") == "on"
         set_setting("registration_enabled", int(registration_enabled_value))
         set_setting("login_enabled", int(login_enabled_value))
+        set_setting("maintenance_mode", int(maintenance_enabled_value))
         flash("Security settings updated successfully.", "success")
 
     return render_template(
@@ -214,7 +245,13 @@ def admin_page():
         name=user.name,
         registration_enabled=registration_enabled(),
         login_enabled=login_enabled(),
+        maintenance_enabled=maintenance_enabled(),
     )
+
+
+@app.route("/maintenance")
+def maintenance_page():
+    return render_template("maintenance.html", title=site_title)
 
 
 @app.route("/profile")
@@ -301,7 +338,7 @@ def ensure_site_settings():
         db.create_all()
         return
 
-    for key, default in (("registration_enabled", "1"), ("login_enabled", "1")):
+    for key, default in (("registration_enabled", "1"), ("login_enabled", "1"), ("maintenance_mode", "0")):
         if not SiteSetting.query.filter_by(key=key).first():
             db.session.add(SiteSetting(key=key, value=default))
     db.session.commit()

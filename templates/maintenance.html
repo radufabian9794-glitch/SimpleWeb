@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }} - Maintenance</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  {% include 'navbar.html' %}
+
+  <main class="hero">
+    <div class="hero-eyebrow">Scheduled Maintenance</div>
+    <h1>We’ll be right back.</h1>
+    <p class="hero-sub">The site is temporarily unavailable while we perform updates. Please check again soon.</p>
+  </main>
+
+  {% include 'footer.html' %}
+</body>
+</html>
