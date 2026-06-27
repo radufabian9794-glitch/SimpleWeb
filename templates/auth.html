@@ -46,6 +46,7 @@
     </div>
  
     <div id="register" class="auth-form">
+      {% if registration_enabled == "1" %}
       <form action="/register" method="post">
         <div class="form-group">
           <label for="reg-name">Full name</label>
@@ -66,6 +67,9 @@
         <button type="submit" class="btn-primary full-width">Create account</button>
         <p class="auth-note">By creating an account, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
       </form>
+      {% else %}
+      <p class="auth-note">New registrations are currently disabled. Please contact the administrator for assistance.</p>
+      {% endif %}
     </div>
   </div>
  
