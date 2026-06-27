@@ -175,7 +175,7 @@ def change_password():
     flash("Password updated successfully.", "success")
     return redirect(url_for("profile"))
  
- @app.route('/privacy')
+@app.route('/privacy')
 def privacy():
     return render_template('privacy.html')
 
