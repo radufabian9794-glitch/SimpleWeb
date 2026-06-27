@@ -31,6 +31,7 @@
     </div>
  
     <div id="login" class="auth-form">
+      {% if login_enabled == "1" %}
       <form action="/login" method="post">
         <div class="form-group">
           <label for="login-email">Email</label>
@@ -43,6 +44,9 @@
         <a href="#" class="forgot-link">Forgot password?</a>
         <button type="submit" class="btn-primary full-width">Sign in</button>
       </form>
+      {% else %}
+      <p class="auth-note">Logins are currently disabled. Please contact the administrator for assistance.</p>
+      {% endif %}
     </div>
  
     <div id="register" class="auth-form">
