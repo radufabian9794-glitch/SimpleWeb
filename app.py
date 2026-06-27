@@ -39,11 +39,44 @@ class User(db.Model):
         return f"<User {self.email}>"
 
 
+class SiteSetting(db.Model):
+    __tablename__ = "site_settings"
+
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(64), unique=True, nullable=False)
+    value = db.Column(db.String(255), nullable=False)
+
+
 # ── Routes ───────────────────────────────────────────────
+def get_setting(key, default="0"):
+    setting = SiteSetting.query.filter_by(key=key).first()
+    return setting.value if setting else default
+
+
+def set_setting(key, value):
+    setting = SiteSetting.query.filter_by(key=key).first()
+    if setting is None:
+        setting = SiteSetting(key=key, value=str(value))
+        db.session.add(setting)
+    else:
+        setting.value = str(value)
+    db.session.commit()
+
+
+def registration_enabled():
+    return get_setting("registration_enabled", "1") == "1"
+
+
+def login_enabled():
+    return get_setting("login_enabled", "1") == "1"
+
+
 @app.context_processor
 def inject_user_context():
     return {
         "is_admin": bool(session.get("user_admin", 0)),
+        "registration_enabled": registration_enabled(),
+        "login_enabled": login_enabled(),
     }
 
 @app.route("/")
@@ -60,8 +93,12 @@ def auth():
     if "user_id" in session:
         flash("You are already logged in.(code: 002)", "success")
         return render_template("dashboard.html", name=session["user_name"] )
-    #flash("You are not logged in(code: Auth 001).", "error")
-    return render_template("auth.html", title=site_title)
+    return render_template(
+        "auth.html",
+        title=site_title,
+        registration_enabled=registration_enabled(),
+        login_enabled=login_enabled(),
+    )
  
 @app.route("/register", methods=["POST"])
 def register():
@@ -70,6 +107,10 @@ def register():
     password = request.form.get("password", "")
     confirm_password = request.form.get("confirm_password", "")
  
+    if not registration_enabled():
+        flash("Registration is currently disabled.", "error")
+        return redirect(url_for("auth") + "#register")
+
     if not name or not email or not password or not confirm_password:
         flash("All fields are required.", "error")
         return redirect(url_for("auth") + "#register")
@@ -106,11 +147,27 @@ def login():
     email = request.form.get("email", "").strip().lower()
     password = request.form.get("password", "")
  
+    if not login_enabled():
+        flash("Login is currently disabled.", "error")
+        return render_template(
+            "auth.html",
+            title=site_title,
+            login_email=email,
+            registration_enabled=registration_enabled(),
+            login_enabled=login_enabled(),
+        )
+
     user = User.query.filter_by(email=email).first()
  
     if not user or not user.check_password(password):
         flash("Invalid email or password.", "error")
-        return render_template("auth.html", title=site_title, login_email=email)
+        return render_template(
+            "auth.html",
+            title=site_title,
+            login_email=email,
+            registration_enabled=registration_enabled(),
+            login_enabled=login_enabled(),
+        )
  
     session["user_id"] = user.id
     session["user_name"] = user.name
@@ -133,7 +190,7 @@ def dashboard():
         return redirect(url_for("auth"))
     return render_template("dashboard.html", title=site_title, name=session["user_name"] )
 
-@app.route("/admin")
+@app.route("/admin", methods=["GET", "POST"])
 def admin_page():
     if "user_id" not in session:
         flash("Please sign in to continue.", "error")
@@ -144,7 +201,20 @@ def admin_page():
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
 
-    return render_template("admin.html", title=site_title, name=user.name)
+    if request.method == "POST":
+        registration_enabled_value = request.form.get("registration_enabled") == "on"
+        login_enabled_value = request.form.get("login_enabled") == "on"
+        set_setting("registration_enabled", int(registration_enabled_value))
+        set_setting("login_enabled", int(login_enabled_value))
+        flash("Security settings updated successfully.", "success")
+
+    return render_template(
+        "admin.html",
+        title=site_title,
+        name=user.name,
+        registration_enabled=registration_enabled(),
+        login_enabled=login_enabled(),
+    )
 
 
 @app.route("/profile")
@@ -225,9 +295,21 @@ def ensure_admin_column():
         db.session.execute(text("ALTER TABLE users ADD COLUMN admin INTEGER NOT NULL DEFAULT 0"))
         db.session.commit()
 
+
+def ensure_site_settings():
+    if not inspect(db.engine).has_table("site_settings"):
+        db.create_all()
+        return
+
+    for key, default in (("registration_enabled", "1"), ("login_enabled", "1")):
+        if not SiteSetting.query.filter_by(key=key).first():
+            db.session.add(SiteSetting(key=key, value=default))
+    db.session.commit()
+
 with app.app_context():
     db.create_all()
     ensure_admin_column()
+    ensure_site_settings()
  
  
 if __name__ == "__main__":
