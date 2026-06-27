@@ -124,6 +124,8 @@ def dashboard():
     return render_template("dashboard.html", title=site_title, name=session["user_name"])
 
 
+
+
 @app.route("/profile")
 def profile():
     if "user_id" not in session:
@@ -134,17 +136,6 @@ def profile():
         flash("User not found.", "error")
         return redirect(url_for("auth"))
     return render_template("profile.html", title=site_title, name=user.name, email=user.email)
-
-@app.route("/profile2")
-def profile2():
-    if "user_id" not in session:
-        flash("Please sign in to continue.", "error")
-        return redirect(url_for("auth"))
-    user = User.query.get(session["user_id"])
-    if not user:
-        flash("User not found.", "error")
-        return redirect(url_for("auth"))
-    return render_template("profile2.html", title=site_title, name=user.name, email=user.email)
 
 @app.route("/profile/change-password", methods=["POST"])
 def change_password():
