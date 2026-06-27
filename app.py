@@ -133,7 +133,18 @@ def dashboard():
         return redirect(url_for("auth"))
     return render_template("dashboard.html", title=site_title, name=session["user_name"] )
 
+@app.route("/admin")
+def admin_page():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
 
+    user = User.query.get(session["user_id"])
+    if not user or user.admin != 1:
+        flash("You do not have permission to access the admin area.", "error")
+        return redirect(url_for("dashboard"))
+
+    return render_template("admin.html", title=site_title, name=user.name)
 
 
 @app.route("/profile")

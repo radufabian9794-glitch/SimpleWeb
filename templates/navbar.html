@@ -7,6 +7,9 @@
         <div class="nav-user-dropdown">
           <a href="/profile">profile</a>
           <a href="/dashboard">dashboard</a>
+          {% if is_admin %}
+            <a href="/admin">admin</a>
+          {% endif %}
           <a href="/logout" class="btn-login">Log out</a>
         </div>
       </div>
