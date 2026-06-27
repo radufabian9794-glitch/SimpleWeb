@@ -175,7 +175,20 @@ def change_password():
     flash("Password updated successfully.", "success")
     return redirect(url_for("profile"))
  
- 
+ @app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    if request.method == 'POST':
+        # Handle form submission here
+        pass
+    return render_template('contact.html')
 # ── DB init ──────────────────────────────────────────────
 with app.app_context():
     db.create_all()
