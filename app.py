@@ -40,7 +40,7 @@ def home():
         #flash("You are already logged in.(code: 001)", "success")
         return render_template("index.html", title=site_title, name=session["user_name"])
     #flash("You are not logged in.", "error")
-    return render_template("index.html", title=site_title)
+    return render_template("index.html", title=site_title, site_title=site_title)
  
  
 @app.route("/auth")
@@ -177,18 +177,18 @@ def change_password():
  
 @app.route('/privacy')
 def privacy():
-    return render_template('privacy.html')
+    return render_template('privacy.html', title=site_title)
 
 @app.route('/terms')
 def terms():
-    return render_template('terms.html')
+    return render_template('terms.html', title=site_title)
 
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
         # Handle form submission here
         pass
-    return render_template('contact.html')
+    return render_template('contact.html', title=site_title)
 # ── DB init ──────────────────────────────────────────────
 with app.app_context():
     db.create_all()

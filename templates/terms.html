@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Terms of Service — Acme</title>
+  <title>{{ title }}</title> 
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 </head>
@@ -21,7 +19,7 @@
 
     <section>
       <h2>Use License</h2>
-      <p>Permission is granted to temporarily download one copy of the materials (information or software) on Acme's website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:</p>
+      <p>Permission is granted to temporarily download one copy of the materials (information or software) on {{ site_title }}'s website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:</p>
       <ul>
         <li>Modify or copy the materials</li>
         <li>Use the materials for any commercial purpose or for any public display</li>
@@ -33,12 +31,12 @@
 
     <section>
       <h2>Disclaimer</h2>
-      <p>The materials on Acme's website are provided on an 'as is' basis. Acme makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.</p>
+      <p>The materials on {{ site_title }}'s website are provided on an 'as is' basis. {{ site_title }} makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.</p>
     </section>
 
     <section>
       <h2>Limitations</h2>
-      <p>In no event shall Acme or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on Acme's website.</p>
+      <p>In no event shall {{ site_title }} or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on {{ site_title }}'s website.</p>
     </section>
 
     <section>
