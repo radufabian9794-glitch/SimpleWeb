@@ -79,6 +79,8 @@ img, svg {
   align-items: center;
   padding: 0.4rem 0.6rem;
   cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
 }
  
 .nav-user-dropdown {
@@ -433,10 +435,26 @@ img, svg {
     width: 100%;
     justify-content: space-between;
     flex-wrap: wrap;
+    gap: 0.75rem;
   }
 
   .nav-links a:not(.btn-login) {
     display: none;
+  }
+
+  .nav-user-menu {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .nav-user-trigger {
+    display: inline-flex;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
   }
 
   .hero-actions {
