@@ -31,7 +31,7 @@
     </div>
  
     <div id="login" class="auth-form">
-      {% if login_enabled == "1" %}
+      {% if login_enabled %}
       <form action="/login" method="post">
         <div class="form-group">
           <label for="login-email">Email</label>
@@ -50,7 +50,7 @@
     </div>
  
     <div id="register" class="auth-form">
-      {% if registration_enabled == "1" %}
+      {% if registration_enabled %}
       <form action="/register" method="post">
         <div class="form-group">
           <label for="reg-name">Full name</label>
