@@ -1,9 +1,9 @@
 <nav class="navbar">
-  <a href="/" class="logo"> ?2 {{ title }}<span>.</span></a>
+  <a href="/" class="logo"> {{ title }}<span>.</span></a>
   <div class="nav-links">
     {% if name %}
       <div class="nav-user-menu">
-        <span class="nav-user-trigger" aria-haspopup="true" aria-expanded="false">{{ name }}{% if is_admin %} 😈 {% else %} 👋({{is_admin}}) {% endif %}</span>
+        <span class="nav-user-trigger" aria-haspopup="true" aria-expanded="false">{{ name }}{% if is_admin %} 😈 {% else %} 👋 {% endif %}</span>
         <div class="nav-user-dropdown">
           <a href="/profile">profile</a>
           <a href="/dashboard">dashboard</a>
@@ -15,7 +15,7 @@
         </div>
       </div>
     {% elif not maintenance_enabled %}
-      <a href="{{ url_for('auth') }}" class="btn-login"> !3 Sign in / Register</a>
+      <a href="{{ url_for('auth') }}" class="btn-login"> Sign in / Register</a>
     {% endif %}
   </div>
 </nav>
