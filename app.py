@@ -59,7 +59,7 @@ def home():
 def auth():
     if "user_id" in session:
         flash("You are already logged in.(code: 002)", "success")
-        return render_template("dashboard.html", name=session["user_name"], is_admin=bool(session.get("user_admin", 0)))
+        return render_template("dashboard.html", name=session["user_name"] )
     #flash("You are not logged in(code: Auth 001).", "error")
     return render_template("auth.html", title=site_title)
  
@@ -131,7 +131,7 @@ def dashboard():
     if "user_id" not in session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-    return render_template("dashboard.html", title=site_title, name=session["user_name"], is_admin=bool(session.get("user_admin", 0)))
+    return render_template("dashboard.html", title=site_title, name=session["user_name"] )
 
 
 
@@ -145,7 +145,7 @@ def profile():
     if not user:
         flash("User not found.", "error")
         return redirect(url_for("auth"))
-    return render_template("profile.html", title=site_title, name=user.name, email=user.email, is_admin=bool(session.get("user_admin", 0)))
+    return render_template("profile.html", title=site_title, name=user.name, email=user.email )
 
 @app.route("/profile/change-password", methods=["POST"])
 def change_password():
@@ -184,13 +184,13 @@ def change_password():
 def privacy():
     if "user_id" in session:
         #flash("You are already logged in.(code: 001)", "success")
-        return render_template("privacy.html", title=site_title, site_email_privacy=site_email_privacy, name=session["user_name"], is_admin=bool(session.get("user_admin", 0)))
+        return render_template("privacy.html", title=site_title, site_email_privacy=site_email_privacy, name=session["user_name"] )
     return render_template('privacy.html', title=site_title , site_email_privacy=site_email_privacy)
 
 @app.route('/terms')
 def terms():
     if "user_id" in session:
-        return render_template('terms.html', title=site_title , site_email_info=site_email_info, name=session["user_name"], is_admin=bool(session.get("user_admin", 0)))
+        return render_template('terms.html', title=site_title , site_email_info=site_email_info, name=session["user_name"] )
     return render_template('terms.html', title=site_title , site_email_info=site_email_info)
 
 @app.route('/contact', methods=['GET', 'POST'])
@@ -200,7 +200,7 @@ def contact():
         pass
     
     if "user_id" in session:
-        return render_template('contact.html', title=site_title , site_email_info=site_email_info, name=session["user_name"], is_admin=bool(session.get("user_admin", 0)))
+        return render_template('contact.html', title=site_title , site_email_info=site_email_info, name=session["user_name"] )
     return render_template('contact.html', title=site_title , site_email_info=site_email_info)
 # ── DB init ──────────────────────────────────────────────
 def ensure_admin_column():
