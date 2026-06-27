@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Acme</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  {% include 'navbar.html' %}
+
+  <div class="content-page">
+    <h1>Privacy Policy</h1>
+    
+    <section>
+      <h2>Introduction</h2>
+      <p>At Acme, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information.</p>
+    </section>
+
+    <section>
+      <h2>Information We Collect</h2>
+      <p>We may collect information about you in a variety of ways. The information we may collect on the Site includes:</p>
+      <ul>
+        <li><strong>Personal Data:</strong> Name, email address, phone number, and other contact information you provide when registering or contacting us.</li>
+        <li><strong>Usage Data:</strong> Information about how you interact with our services, including IP address, browser type, and pages visited.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>How We Use Your Information</h2>
+      <p>We use the information we collect for various purposes, including:</p>
+      <ul>
+        <li>To provide, maintain, and improve our services</li>
+        <li>To process transactions and send related information</li>
+        <li>To send marketing and promotional communications (with your consent)</li>
+        <li>To respond to your inquiries and customer support requests</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Data Security</h2>
+      <p>We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction.</p>
+    </section>
+
+    <section>
+      <h2>Contact Us</h2>
+      <p>If you have questions about this Privacy Policy, please contact us at <a href="mailto:privacy@acme.com">privacy@acme.com</a>.</p>
+    </section>
+  </div>
+
+  {% include 'footer.html' %}
+
+</body>
+</html>
