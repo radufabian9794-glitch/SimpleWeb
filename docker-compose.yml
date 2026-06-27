@@ -18,7 +18,7 @@ services:
           memory: 128M
   web:
     build: .
-    image: simpleweb:v0.0.2
+    image: simpleweb:v0.0.3
     env_file:
       - .env
     ports:
