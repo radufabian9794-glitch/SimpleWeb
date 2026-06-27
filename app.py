@@ -12,7 +12,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
  
 db = SQLAlchemy(app)
  
- site_title = "SimpleWeb"
+site_title = "SimpleWeb"
  
 # ── Models ──────────────────────────────────────────────
 class User(db.Model):
