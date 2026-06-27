@@ -1,6 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect, text
 from werkzeug.security import generate_password_hash, check_password_hash
  
 app = Flask(__name__)
@@ -202,8 +203,20 @@ def contact():
         return render_template('contact.html', title=site_title , site_email_info=site_email_info, name=session["user_name"])
     return render_template('contact.html', title=site_title , site_email_info=site_email_info)
 # ── DB init ──────────────────────────────────────────────
+def ensure_admin_column():
+    inspector = inspect(db.engine)
+    if not inspector.has_table("users"):
+        db.create_all()
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("users")}
+    if "admin" not in columns:
+        db.session.execute(text("ALTER TABLE users ADD COLUMN admin INTEGER NOT NULL DEFAULT 0"))
+        db.session.commit()
+
 with app.app_context():
     db.create_all()
+    ensure_admin_column()
  
  
 if __name__ == "__main__":
