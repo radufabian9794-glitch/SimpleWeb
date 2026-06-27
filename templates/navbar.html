@@ -8,9 +8,10 @@
               <div class="nav-user-dropdown">
                   <a href="/profile">profile</a>
                   <a href="/dashboard">dashboard</a>
+                  <a href="/logout" class="btn-login">Log out</a>
               </div>
           </div>
-          <a href="/logout" class="btn-login">Log out</a>
+          
       {% else %}
           <a href="{{ url_for('auth') }}" class="btn-login">Sign in / Register</a>
       {% endif %}
