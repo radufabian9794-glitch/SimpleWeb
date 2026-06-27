@@ -43,6 +43,9 @@ class User(db.Model):
 @app.context_processor
 def inject_user_context():
     return {
+        print("user_id", session.get("user_id")),
+        print("user_name", session.get("user_name")),
+        print("user_admin", session.get("user_admin")),
         "is_admin": bool(session.get("user_admin", 0)),
     }
 
