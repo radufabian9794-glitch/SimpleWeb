@@ -3,7 +3,7 @@
   <div class="nav-links">
     {% if name %}
       <div class="nav-user-menu">
-        <span class="nav-user-trigger" aria-haspopup="true" aria-expanded="false">👋 {{ name }}</span>
+        <span class="nav-user-trigger" aria-haspopup="true" aria-expanded="false">👋 {{ name }}{% if is_admin %} 😈{% endif %}</span>
         <div class="nav-user-dropdown">
           <a href="/profile">profile</a>
           <a href="/dashboard">dashboard</a>

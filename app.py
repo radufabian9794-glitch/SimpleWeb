@@ -39,6 +39,12 @@ class User(db.Model):
 
 
 # ── Routes ───────────────────────────────────────────────
+@app.context_processor
+def inject_user_context():
+    return {
+        "is_admin": bool(session.get("user_admin", 0)),
+    }
+
 @app.route("/")
 def home():
     if "user_id" in session:
@@ -86,6 +92,7 @@ def register():
  
     session["user_id"] = user.id
     session["user_name"] = user.name
+    session["user_admin"] = user.admin
  
     flash(f"Welcome, {user.name}! Your account has been created.", "success")
     return redirect(url_for("dashboard"))
@@ -106,6 +113,7 @@ def login():
  
     session["user_id"] = user.id
     session["user_name"] = user.name
+    session["user_admin"] = user.admin
  
     flash(f"Welcome back, {user.name}!", "success")
     return redirect(url_for("dashboard"))
