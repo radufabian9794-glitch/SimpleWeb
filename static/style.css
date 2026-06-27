@@ -78,6 +78,7 @@ img, svg {
   display: inline-flex;
   align-items: center;
   padding: 0.4rem 0.6rem;
+  cursor: pointer;
 }
  
 .nav-user-dropdown {
@@ -100,8 +101,7 @@ img, svg {
   white-space: nowrap;
 }
  
-.nav-user-menu:hover .nav-user-dropdown,
-.nav-user-menu:focus-within .nav-user-dropdown {
+.nav-user-menu.is-open .nav-user-dropdown {
   display: flex;
 }
  

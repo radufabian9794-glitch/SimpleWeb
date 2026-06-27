@@ -1,24 +1,45 @@
 <nav class="navbar">
   <a href="/" class="logo">{{ title }}<span>.</span></a>
   <div class="nav-links">
-
-      {% if name %}
-          <div class="nav-user-menu">
-            TEST
-              
-
-              ?<span class="nav-user">👋 !{{ name }} !</span>?
-              <div class="nav-user-dropdown">
-                  <a href="/profile">profile</a>
-                  <a href="/dashboard">dashboard</a>
-                  <a href="/logout" class="btn-login">Log out</a>
-              </div>
-
-              | TEST2
-          </div>
-          
-      {% else %}
-          <a href="{{ url_for('auth') }}" class="btn-login">Sign in / Register</a>
-      {% endif %}
+    {% if name %}
+      <div class="nav-user-menu">
+        <a href="#" class="nav-user-trigger" aria-haspopup="true" aria-expanded="false">
+          <span class="nav-user">👋 {{ name }}</span>
+        </a>
+        <div class="nav-user-dropdown">
+          <a href="/profile">profile</a>
+          <a href="/dashboard">dashboard</a>
+          <a href="/logout" class="btn-login">Log out</a>
+        </div>
+      </div>
+    {% else %}
+      <a href="{{ url_for('auth') }}" class="btn-login">Sign in / Register</a>
+    {% endif %}
   </div>
 </nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.nav-user-menu').forEach(function (menu) {
+    const trigger = menu.querySelector('.nav-user-trigger');
+    const dropdown = menu.querySelector('.nav-user-dropdown');
+
+    if (!trigger || !dropdown) {
+      return;
+    }
+
+    trigger.addEventListener('click', function (event) {
+      event.preventDefault();
+      const isOpen = menu.classList.toggle('is-open');
+      trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', function (event) {
+      if (!menu.contains(event.target)) {
+        menu.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  });
+});
+</script>
