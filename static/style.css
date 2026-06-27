@@ -104,8 +104,13 @@ img, svg {
   color: red;
 } 
  .nav-user-dropdown-options{
+  background: var(--ink) !important;
   color: green !important;
   padding: 0.55rem 1.25rem !important;
+  border-radius: var(--radius) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  transition: background 0.2s !important;
 
  }
  
