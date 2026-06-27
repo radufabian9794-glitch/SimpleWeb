@@ -254,6 +254,9 @@ def admin_page():
 
 @app.route("/maintenance")
 def maintenance_page():
+    if not maintenance_enabled():
+        flash("Maintenance mode is not enabled.", "error")
+        return redirect(url_for("home"))
     return render_template("maintenance.html", title=site_title)
 
 
