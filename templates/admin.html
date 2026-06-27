@@ -12,6 +12,10 @@
     <h1>Admin Panel</h1>
     <p>Welcome, {{ name }}. This area is restricted to administrators.</p>
 
+    <div class="admin-actions" style="margin: 1rem 0 2rem;">
+      <a href="{{ url_for('admin_user_management') }}" class="btn-secondary">Manage Users</a>
+    </div>
+
     <form method="post" class="profile-card" style="margin: 2rem 0 0;">
       <h2>Security Settings</h2>
       <div class="form-group">

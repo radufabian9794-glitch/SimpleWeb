@@ -9,6 +9,7 @@
           <a href="/dashboard">dashboard</a>
           {% if is_admin %}
             <a href="/admin">admin</a>
+            <a href="{{ url_for('admin_user_management') }}">user management</a>
           {% endif %}
           <a href="/logout" class="btn-login">Log out</a>
         </div>

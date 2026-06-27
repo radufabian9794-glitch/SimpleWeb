@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>{{ title }} - User Management</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  {% include 'navbar.html' %}
+
+  <main class="dashboard">
+    <h1>User Management</h1>
+    <p>All registered users are listed below. Only administrators can change passwords.</p>
+
+    <div class="profile-card" style="overflow-x:auto;">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Admin</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+            <tr>
+              <td>{{ user.id }}</td>
+              <td>{{ user.name }}</td>
+              <td>{{ 'Yes' if user.admin == 1 else 'No' }}</td>
+              <td>
+                <a href="{{ url_for('admin_user_change_password', user_id=user.id) }}" class="btn-secondary">Change Password</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  {% include 'footer.html' %}
+</body>
+</html>

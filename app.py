@@ -252,6 +252,77 @@ def admin_page():
     )
 
 
+@app.route("/admin/users")
+def admin_user_management():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+
+    current_user = User.query.get(session["user_id"])
+    if not current_user or current_user.admin != 1:
+        flash("You do not have permission to access the admin area.", "error")
+        return redirect(url_for("dashboard"))
+
+    users = User.query.order_by(User.id).all()
+    return render_template(
+        "admin_users.html",
+        title=site_title,
+        name=current_user.name,
+        users=users,
+    )
+
+
+@app.route("/admin/users/<int:user_id>/change-password", methods=["GET", "POST"])
+def admin_user_change_password(user_id):
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+
+    current_user = User.query.get(session["user_id"])
+    if not current_user or current_user.admin != 1:
+        flash("You do not have permission to access the admin area.", "error")
+        return redirect(url_for("dashboard"))
+
+    target_user = User.query.get(user_id)
+    if not target_user:
+        flash("User not found.", "error")
+        return redirect(url_for("admin_user_management"))
+
+    if request.method == "POST":
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if new_password != confirm_password:
+            flash("New passwords do not match.", "error")
+            return render_template(
+                "admin_change_password.html",
+                title=site_title,
+                name=current_user.name,
+                target_user=target_user,
+            )
+
+        if len(new_password) < 8:
+            flash("Password must be at least 8 characters.", "error")
+            return render_template(
+                "admin_change_password.html",
+                title=site_title,
+                name=current_user.name,
+                target_user=target_user,
+            )
+
+        target_user.set_password(new_password)
+        db.session.commit()
+        flash(f"Password for {target_user.name} updated successfully.", "success")
+        return redirect(url_for("admin_user_management"))
+
+    return render_template(
+        "admin_change_password.html",
+        title=site_title,
+        name=current_user.name,
+        target_user=target_user,
+    )
+
+
 @app.route("/maintenance")
 def maintenance_page():
     if not maintenance_enabled():
