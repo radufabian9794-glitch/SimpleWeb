@@ -22,7 +22,7 @@ services:
 
   web:
     build: .
-    image: simpleweb:v0.0.3
+    image: simpleweb:v0.0.4
     env_file:
       - .env
     ports:
