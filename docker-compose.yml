@@ -7,7 +7,10 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./static:/app/static:ro
     depends_on:
-      - web
+      web:
+        condition: service_healthy
+    networks:
+      - simple_appnet
     deploy:
       resources:
         limits:
@@ -16,6 +19,7 @@ services:
         reservations:
           cpus: '0.1'
           memory: 128M
+
   web:
     build: .
     image: simpleweb:v0.0.3
@@ -24,9 +28,18 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/mydb
+    networks:
+      - simple_appnet
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -44,6 +57,14 @@ services:
       - POSTGRES_DB=mydb
     volumes:
       - db_data:/var/lib/postgresql/data
+    networks:
+      - simple_appnet
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d mydb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -52,6 +73,10 @@ services:
         reservations:
           cpus: '0.5'
           memory: 512M
+
+networks:
+  simple_appnet:
+    driver: bridge
 
 volumes:
   db_data:
