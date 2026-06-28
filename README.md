@@ -1,6 +1,6 @@
 # SimpleWeb
 
-SimpleWeb is a lightweight Flask application for user authentication, account access, and profile management. The current version focuses on signing in, viewing a dashboard, and managing account details rather than budgeting or transaction tracking.
+SimpleWeb is a lightweight Flask application for user authentication, account access, and user management.
 
 ## Features
 
@@ -9,6 +9,8 @@ SimpleWeb is a lightweight Flask application for user authentication, account ac
 - **Protected dashboard** for logged-in users.
 - **Profile pages** for viewing account details.
 - **Password change flow** that verifies the current password before updating it.
+- **Admin user management** with a protected user list and admin-only password reset.
+- **Maintenance mode** that can be enabled from the admin panel and redirects non-admin users to a maintenance page.
 - **Flash messages** for success and error feedback.
 - **Docker-ready deployment** with Nginx and PostgreSQL.
 
@@ -106,6 +108,10 @@ The app uses simple Flask routes for authentication and profile management:
 - `GET /profile` - User profile page
 - `GET /profile2` - Alternate profile page
 - `POST /profile/change-password` - Change the logged-in user's password
+- `GET /admin` - Admin settings page (admin only)
+- `GET /admin/users` - Admin user management list (admin only)
+- `GET /admin/users/<user_id>/change-password` - Admin change password form for a specific user
+- `POST /admin/users/<user_id>/change-password` - Submit a new password for a user
 
 ## Environment Variables
 
