@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect, text
 from werkzeug.security import generate_password_hash, check_password_hash
+from contextlib import contextmanager
  
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
@@ -326,6 +327,17 @@ def _validate_foreign_keys_for_rows(table_name, rows):
     return True, None
 
 
+@contextmanager
+def transactional_session():
+    """Context manager that begins a transaction, using a nested savepoint if one is already active."""
+    if db.session.in_transaction():
+        with db.session.begin_nested():
+            yield
+    else:
+        with db.session.begin():
+            yield
+
+
 @app.route("/admin/backup/export")
 def admin_backup_export():
     if "user_id" not in session:
@@ -400,7 +412,7 @@ def admin_import_users():
 
     try:
         rows = payload if isinstance(payload, list) else payload.get("users", [])
-        with db.session.begin():
+        with transactional_session():
             _clear_table_and_dependents("users")
             for row in rows:
                 u = User()
@@ -457,7 +469,7 @@ def admin_import_site_settings():
 
     try:
         rows = payload if isinstance(payload, list) else payload.get("site_settings", [])
-        with db.session.begin():
+        with transactional_session():
             _clear_table_and_dependents("site_settings")
             for row in rows:
                 s = SiteSetting()
@@ -528,7 +540,7 @@ def admin_import_transactions():
             flash(f"Failed to import transactions: {msg}", "error")
             return redirect(url_for("admin_page"))
 
-        with db.session.begin():
+        with transactional_session():
             _clear_table_and_dependents("transactions")
             inspector = inspect(db.engine)
             cols = [c["name"] for c in inspector.get_columns("transactions")]
@@ -577,7 +589,7 @@ def admin_backup_import():
 
             # Clear dependent tables then parents
             # perform imports inside one transaction and validate foreign keys
-            with db.session.begin():
+            with transactional_session():
                 # clear dependent tables first
                 _clear_table_and_dependents("transactions")
                 _clear_table_and_dependents("users")
