@@ -1,5 +1,7 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+import json
+from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, flash, session, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect, text
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -250,6 +252,98 @@ def admin_page():
         login_enabled=login_enabled(),
         maintenance_enabled=maintenance_enabled(),
     )
+
+
+def _serialize_model_rows(model):
+    rows = model.query.all()
+    result = []
+    for r in rows:
+        row = {}
+        for c in r.__table__.columns:
+            val = getattr(r, c.name)
+            # JSON serialize datetimes or other non-JSONable types if needed
+            if isinstance(val, datetime):
+                val = val.isoformat()
+            row[c.name] = val
+        result.append(row)
+    return result
+
+
+@app.route("/admin/backup/export")
+def admin_backup_export():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+
+    current_user = User.query.get(session["user_id"])
+    if not current_user or current_user.admin != 1:
+        flash("You do not have permission to access the admin area.", "error")
+        return redirect(url_for("dashboard"))
+
+    backup = {
+        "users": _serialize_model_rows(User),
+        "site_settings": _serialize_model_rows(SiteSetting),
+    }
+
+    data = json.dumps(backup, indent=2)
+    filename = f"simpleweb-backup-{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
+    return Response(
+        data,
+        mimetype="application/json",
+        headers={"Content-Disposition": f"attachment;filename={filename}"},
+    )
+
+
+@app.route("/admin/backup/import", methods=["POST"])
+def admin_backup_import():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+
+    current_user = User.query.get(session["user_id"])
+    if not current_user or current_user.admin != 1:
+        flash("You do not have permission to access the admin area.", "error")
+        return redirect(url_for("dashboard"))
+
+    f = request.files.get("backup_file")
+    if not f:
+        flash("No backup file uploaded.", "error")
+        return redirect(url_for("admin_page"))
+
+    try:
+        payload = json.load(f)
+    except Exception:
+        flash("Uploaded file is not valid JSON.", "error")
+        return redirect(url_for("admin_page"))
+
+    try:
+        # Clear current data and restore from backup
+        # Delete rows in a safe order (child -> parent) if relationships exist
+        User.query.delete()
+        SiteSetting.query.delete()
+        db.session.commit()
+
+        users = payload.get("users", [])
+        for row in users:
+            u = User()
+            for k, v in row.items():
+                setattr(u, k, v)
+            db.session.add(u)
+
+        settings = payload.get("site_settings", [])
+        for row in settings:
+            s = SiteSetting()
+            for k, v in row.items():
+                setattr(s, k, v)
+            db.session.add(s)
+
+        db.session.commit()
+        flash("Backup imported successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to import backup: {e}", "error")
+
+    return redirect(url_for("admin_page"))
 
 
 @app.route("/admin/users")

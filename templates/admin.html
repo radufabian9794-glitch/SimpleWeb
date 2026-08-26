@@ -38,6 +38,18 @@
       </div>
       <button type="submit" class="btn-primary">Save Settings</button>
     </form>
+
+    <section class="profile-card" style="margin: 2rem 0 0;">
+      <h2>Database Backup</h2>
+      <p>Export a JSON backup of the database or upload a previously exported JSON to restore.</p>
+      <div style="display:flex;gap:1rem;align-items:center;">
+        <a href="{{ url_for('admin_backup_export') }}" class="btn-secondary">Export Backup</a>
+        <form action="{{ url_for('admin_backup_import') }}" method="post" enctype="multipart/form-data" style="display:inline-block;">
+          <input type="file" name="backup_file" accept="application/json" required />
+          <button type="submit" class="btn-primary">Import Backup</button>
+        </form>
+      </div>
+    </section>
   </main>
 
   {% include 'footer.html' %}
