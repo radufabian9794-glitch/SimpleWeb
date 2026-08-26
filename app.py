@@ -280,18 +280,23 @@ def admin_backup_export():
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
 
-    backup = {
-        "users": _serialize_model_rows(User),
-        "site_settings": _serialize_model_rows(SiteSetting),
-    }
+    try:
+        backup = {
+            "users": _serialize_model_rows(User),
+            "site_settings": _serialize_model_rows(SiteSetting),
+        }
 
-    data = json.dumps(backup, indent=2)
-    filename = f"simpleweb-backup-{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
-    return Response(
-        data,
-        mimetype="application/json",
-        headers={"Content-Disposition": f"attachment;filename={filename}"},
-    )
+        data = json.dumps(backup, indent=2)
+        filename = f"simpleweb-backup-{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
+        flash("Backup export ready. Your download will start.", "success")
+        return Response(
+            data,
+            mimetype="application/json",
+            headers={"Content-Disposition": f"attachment;filename={filename}"},
+        )
+    except Exception as e:
+        flash(f"Failed to prepare backup: {e}", "error")
+        return redirect(url_for("admin_page"))
 
 
 @app.route("/admin/backup/import", methods=["POST"])
