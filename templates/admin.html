@@ -50,12 +50,32 @@
 
     <section class="profile-card" style="margin: 2rem 0 0;">
       <h2>Database Backup</h2>
-      <p>Export a JSON backup of the database or upload a previously exported JSON to restore.</p>
-      <div style="display:flex;gap:1rem;align-items:center;">
-        <a href="{{ url_for('admin_backup_export') }}" class="btn-secondary">Export Backup</a>
-        <form action="{{ url_for('admin_backup_import') }}" method="post" enctype="multipart/form-data" style="display:inline-block;">
+      <p>Export or import individual tables.</p>
+
+      <div class="backup-row">
+        <strong>Users</strong>
+        <a href="{{ url_for('admin_export_users') }}" class="btn-secondary">Export Users</a>
+        <form action="{{ url_for('admin_import_users') }}" method="post" enctype="multipart/form-data" style="display:inline-block;margin-left:0.5rem;">
           <input type="file" name="backup_file" accept="application/json" required />
-          <button type="submit" class="btn-primary">Import Backup</button>
+          <button type="submit" class="btn-primary">Import Users</button>
+        </form>
+      </div>
+
+      <div class="backup-row">
+        <strong>Site Settings</strong>
+        <a href="{{ url_for('admin_export_site_settings') }}" class="btn-secondary">Export Settings</a>
+        <form action="{{ url_for('admin_import_site_settings') }}" method="post" enctype="multipart/form-data" style="display:inline-block;margin-left:0.5rem;">
+          <input type="file" name="backup_file" accept="application/json" required />
+          <button type="submit" class="btn-primary">Import Settings</button>
+        </form>
+      </div>
+
+      <div class="backup-row">
+        <strong>Transactions</strong>
+        <a href="{{ url_for('admin_export_transactions') }}" class="btn-secondary">Export Transactions</a>
+        <form action="{{ url_for('admin_import_transactions') }}" method="post" enctype="multipart/form-data" style="display:inline-block;margin-left:0.5rem;">
+          <input type="file" name="backup_file" accept="application/json" required />
+          <button type="submit" class="btn-primary">Import Transactions</button>
         </form>
       </div>
     </section>

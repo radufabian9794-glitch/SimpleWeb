@@ -284,6 +284,7 @@ def admin_backup_export():
         backup = {
             "users": _serialize_model_rows(User),
             "site_settings": _serialize_model_rows(SiteSetting),
+            "transactions": _serialize_table_by_name("transactions") if inspect(db.engine).has_table("transactions") else [],
         }
 
         data = json.dumps(backup, indent=2)
@@ -297,6 +298,190 @@ def admin_backup_export():
     except Exception as e:
         flash(f"Failed to prepare backup: {e}", "error")
         return redirect(url_for("admin_page"))
+
+
+@app.route("/admin/backup/export/users")
+def admin_export_users():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+    current_user = User.query.get(session["user_id"])
+    if not current_user or current_user.admin != 1:
+        flash("You do not have permission to access the admin area.", "error")
+        return redirect(url_for("dashboard"))
+
+    try:
+        data = json.dumps(_serialize_model_rows(User), indent=2)
+        filename = f"users-backup-{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
+        flash("Users export ready.", "success")
+        return Response(data, mimetype="application/json", headers={"Content-Disposition": f"attachment;filename={filename}"})
+    except Exception as e:
+        flash(f"Failed to export users: {e}", "error")
+        return redirect(url_for("admin_page"))
+
+
+@app.route("/admin/backup/import/users", methods=["POST"])
+def admin_import_users():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+    current_user = User.query.get(session["user_id"])
+    if not current_user or current_user.admin != 1:
+        flash("You do not have permission to access the admin area.", "error")
+        return redirect(url_for("dashboard"))
+
+    f = request.files.get("backup_file")
+    if not f:
+        flash("No backup file uploaded.", "error")
+        return redirect(url_for("admin_page"))
+
+    try:
+        payload = json.load(f)
+    except Exception:
+        flash("Uploaded file is not valid JSON.", "error")
+        return redirect(url_for("admin_page"))
+
+    try:
+        rows = payload if isinstance(payload, list) else payload.get("users", [])
+        _clear_table_and_dependents("users")
+        for row in rows:
+            u = User()
+            for k, v in row.items():
+                setattr(u, k, v)
+            db.session.add(u)
+        db.session.commit()
+        flash("Users imported successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to import users: {e}", "error")
+
+    return redirect(url_for("admin_page"))
+
+
+@app.route("/admin/backup/export/site_settings")
+def admin_export_site_settings():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+    current_user = User.query.get(session["user_id"])
+    if not current_user or current_user.admin != 1:
+        flash("You do not have permission to access the admin area.", "error")
+        return redirect(url_for("dashboard"))
+
+    try:
+        data = json.dumps(_serialize_model_rows(SiteSetting), indent=2)
+        filename = f"site-settings-backup-{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
+        flash("Site settings export ready.", "success")
+        return Response(data, mimetype="application/json", headers={"Content-Disposition": f"attachment;filename={filename}"})
+    except Exception as e:
+        flash(f"Failed to export site settings: {e}", "error")
+        return redirect(url_for("admin_page"))
+
+
+@app.route("/admin/backup/import/site_settings", methods=["POST"])
+def admin_import_site_settings():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+    current_user = User.query.get(session["user_id"])
+    if not current_user or current_user.admin != 1:
+        flash("You do not have permission to access the admin area.", "error")
+        return redirect(url_for("dashboard"))
+
+    f = request.files.get("backup_file")
+    if not f:
+        flash("No backup file uploaded.", "error")
+        return redirect(url_for("admin_page"))
+
+    try:
+        payload = json.load(f)
+    except Exception:
+        flash("Uploaded file is not valid JSON.", "error")
+        return redirect(url_for("admin_page"))
+
+    try:
+        rows = payload if isinstance(payload, list) else payload.get("site_settings", [])
+        _clear_table_and_dependents("site_settings")
+        for row in rows:
+            s = SiteSetting()
+            for k, v in row.items():
+                setattr(s, k, v)
+            db.session.add(s)
+        db.session.commit()
+        flash("Site settings imported successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to import site settings: {e}", "error")
+
+    return redirect(url_for("admin_page"))
+
+
+@app.route("/admin/backup/export/transactions")
+def admin_export_transactions():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+    current_user = User.query.get(session["user_id"])
+    if not current_user or current_user.admin != 1:
+        flash("You do not have permission to access the admin area.", "error")
+        return redirect(url_for("dashboard"))
+
+    try:
+        if not inspect(db.engine).has_table("transactions"):
+            flash("No transactions table present.", "error")
+            return redirect(url_for("admin_page"))
+        data = json.dumps(_serialize_table_by_name("transactions"), indent=2)
+        filename = f"transactions-backup-{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
+        flash("Transactions export ready.", "success")
+        return Response(data, mimetype="application/json", headers={"Content-Disposition": f"attachment;filename={filename}"})
+    except Exception as e:
+        flash(f"Failed to export transactions: {e}", "error")
+        return redirect(url_for("admin_page"))
+
+
+@app.route("/admin/backup/import/transactions", methods=["POST"])
+def admin_import_transactions():
+    if "user_id" not in session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+    current_user = User.query.get(session["user_id"])
+    if not current_user or current_user.admin != 1:
+        flash("You do not have permission to access the admin area.", "error")
+        return redirect(url_for("dashboard"))
+
+    if not inspect(db.engine).has_table("transactions"):
+        flash("No transactions table present.", "error")
+        return redirect(url_for("admin_page"))
+
+    f = request.files.get("backup_file")
+    if not f:
+        flash("No backup file uploaded.", "error")
+        return redirect(url_for("admin_page"))
+
+    try:
+        payload = json.load(f)
+    except Exception:
+        flash("Uploaded file is not valid JSON.", "error")
+        return redirect(url_for("admin_page"))
+
+    try:
+        rows = payload if isinstance(payload, list) else payload.get("transactions", [])
+        _clear_table_and_dependents("transactions")
+        inspector = inspect(db.engine)
+        cols = [c["name"] for c in inspector.get_columns("transactions")]
+        for row in rows:
+            params = {c: row.get(c) for c in cols}
+            cols_list = ",".join(cols)
+            vals_list = ",".join([f":{c}" for c in cols])
+            sql = text(f"INSERT INTO transactions ({cols_list}) VALUES ({vals_list})")
+            db.session.execute(sql, params)
+        db.session.commit()
+        flash("Transactions imported successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Failed to import transactions: {e}", "error")
+
+    return redirect(url_for("admin_page"))
 
 
 @app.route("/admin/backup/import", methods=["POST"])
@@ -322,28 +507,44 @@ def admin_backup_import():
         return redirect(url_for("admin_page"))
 
     try:
-        # Clear current data and restore from backup
-        # Delete rows in a safe order (child -> parent) if relationships exist
-        User.query.delete()
-        SiteSetting.query.delete()
-        db.session.commit()
+        # If the uploaded JSON is the full backup object (users/site_settings/transactions), accept that
+        if isinstance(payload, dict) and ("users" in payload or "site_settings" in payload or "transactions" in payload):
+            users = payload.get("users", [])
+            settings = payload.get("site_settings", [])
+            transactions = payload.get("transactions", [])
 
-        users = payload.get("users", [])
-        for row in users:
-            u = User()
-            for k, v in row.items():
-                setattr(u, k, v)
-            db.session.add(u)
+            # Clear dependent tables then parents
+            _clear_table_and_dependents("transactions")
+            _clear_table_and_dependents("users")
+            _clear_table_and_dependents("site_settings")
 
-        settings = payload.get("site_settings", [])
-        for row in settings:
-            s = SiteSetting()
-            for k, v in row.items():
-                setattr(s, k, v)
-            db.session.add(s)
+            for row in users:
+                u = User()
+                for k, v in row.items():
+                    setattr(u, k, v)
+                db.session.add(u)
 
-        db.session.commit()
-        flash("Backup imported successfully.", "success")
+            for row in settings:
+                s = SiteSetting()
+                for k, v in row.items():
+                    setattr(s, k, v)
+                db.session.add(s)
+
+            # insert transactions via dynamic insert
+            if transactions:
+                inspector = inspect(db.engine)
+                cols = [c["name"] for c in inspector.get_columns("transactions")]
+                for row in transactions:
+                    params = {c: row.get(c) for c in cols}
+                    cols_list = ",".join(cols)
+                    vals_list = ",".join([f":{c}" for c in cols])
+                    sql = text(f"INSERT INTO transactions ({cols_list}) VALUES ({vals_list})")
+                    db.session.execute(sql, params)
+
+            db.session.commit()
+            flash("Backup imported successfully.", "success")
+        else:
+            flash("Uploaded JSON did not contain recognized backup keys.", "error")
     except Exception as e:
         db.session.rollback()
         flash(f"Failed to import backup: {e}", "error")
