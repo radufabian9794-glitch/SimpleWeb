@@ -283,7 +283,7 @@ def _clear_table_and_dependents(table_name):
 
     # Then delete from the requested table
     db.session.execute(text(f"DELETE FROM {table_name}"))
-    db.session.commit()
+    # NOTE: do not commit here; caller should manage transaction scope to avoid nested transactions
 
 
 def _validate_foreign_keys_for_rows(table_name, rows):
