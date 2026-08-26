@@ -286,6 +286,46 @@ def _clear_table_and_dependents(table_name):
     db.session.commit()
 
 
+def _validate_foreign_keys_for_rows(table_name, rows):
+    """Validate that values referenced by foreign keys in `rows` exist in their referenced tables.
+    Returns (True, None) on success or (False, error_message) on failure.
+    Supports single-column FKs only.
+    """
+    inspector = inspect(db.engine)
+    fks = inspector.get_foreign_keys(table_name)
+    for fk in fks:
+        constrained = fk.get("constrained_columns") or fk.get("constrained_columns")
+        referred_table = fk.get("referred_table")
+        referred_cols = fk.get("referred_columns")
+        if not constrained or not referred_table or not referred_cols:
+            continue
+        if len(constrained) != 1 or len(referred_cols) != 1:
+            return False, f"Composite foreign key validation not supported for {table_name}."
+        col = constrained[0]
+        ref_col = referred_cols[0]
+
+        vals = {r.get(col) for r in rows if r.get(col) is not None}
+        if not vals:
+            continue
+
+        # build paramized IN clause
+        placeholders = []
+        params = {}
+        for i, v in enumerate(sorted(vals)):
+            key = f"v{i}"
+            placeholders.append(f":" + key)
+            params[key] = v
+
+        sql = text(f"SELECT DISTINCT {ref_col} FROM {referred_table} WHERE {ref_col} IN ({', '.join(placeholders)})")
+        found = db.session.execute(sql, params).fetchall()
+        found_set = {row[0] for row in found}
+        missing = set(vals) - found_set
+        if missing:
+            return False, f"Missing references in {referred_table}.{ref_col}: {sorted(missing)}"
+
+    return True, None
+
+
 @app.route("/admin/backup/export")
 def admin_backup_export():
     if "user_id" not in session:
@@ -360,16 +400,15 @@ def admin_import_users():
 
     try:
         rows = payload if isinstance(payload, list) else payload.get("users", [])
-        _clear_table_and_dependents("users")
-        for row in rows:
-            u = User()
-            for k, v in row.items():
-                setattr(u, k, v)
-            db.session.add(u)
-        db.session.commit()
+        with db.session.begin():
+            _clear_table_and_dependents("users")
+            for row in rows:
+                u = User()
+                for k, v in row.items():
+                    setattr(u, k, v)
+                db.session.add(u)
         flash("Users imported successfully.", "success")
     except Exception as e:
-        db.session.rollback()
         flash(f"Failed to import users: {e}", "error")
 
     return redirect(url_for("admin_page"))
@@ -418,16 +457,15 @@ def admin_import_site_settings():
 
     try:
         rows = payload if isinstance(payload, list) else payload.get("site_settings", [])
-        _clear_table_and_dependents("site_settings")
-        for row in rows:
-            s = SiteSetting()
-            for k, v in row.items():
-                setattr(s, k, v)
-            db.session.add(s)
-        db.session.commit()
+        with db.session.begin():
+            _clear_table_and_dependents("site_settings")
+            for row in rows:
+                s = SiteSetting()
+                for k, v in row.items():
+                    setattr(s, k, v)
+                db.session.add(s)
         flash("Site settings imported successfully.", "success")
     except Exception as e:
-        db.session.rollback()
         flash(f"Failed to import site settings: {e}", "error")
 
     return redirect(url_for("admin_page"))
@@ -483,19 +521,26 @@ def admin_import_transactions():
 
     try:
         rows = payload if isinstance(payload, list) else payload.get("transactions", [])
-        _clear_table_and_dependents("transactions")
-        inspector = inspect(db.engine)
-        cols = [c["name"] for c in inspector.get_columns("transactions")]
-        for row in rows:
-            params = {c: row.get(c) for c in cols}
-            cols_list = ",".join(cols)
-            vals_list = ",".join([f":{c}" for c in cols])
-            sql = text(f"INSERT INTO transactions ({cols_list}) VALUES ({vals_list})")
-            db.session.execute(sql, params)
-        db.session.commit()
+
+        # Validate foreign keys first (e.g., user_id references users.id)
+        ok, msg = _validate_foreign_keys_for_rows("transactions", rows)
+        if not ok:
+            flash(f"Failed to import transactions: {msg}", "error")
+            return redirect(url_for("admin_page"))
+
+        with db.session.begin():
+            _clear_table_and_dependents("transactions")
+            inspector = inspect(db.engine)
+            cols = [c["name"] for c in inspector.get_columns("transactions")]
+            for row in rows:
+                params = {c: row.get(c) for c in cols}
+                cols_list = ",".join(cols)
+                vals_list = ",".join([f":{c}" for c in cols])
+                sql = text(f"INSERT INTO transactions ({cols_list}) VALUES ({vals_list})")
+                db.session.execute(sql, params)
+
         flash("Transactions imported successfully.", "success")
     except Exception as e:
-        db.session.rollback()
         flash(f"Failed to import transactions: {e}", "error")
 
     return redirect(url_for("admin_page"))
@@ -531,34 +576,43 @@ def admin_backup_import():
             transactions = payload.get("transactions", [])
 
             # Clear dependent tables then parents
-            _clear_table_and_dependents("transactions")
-            _clear_table_and_dependents("users")
-            _clear_table_and_dependents("site_settings")
+            # perform imports inside one transaction and validate foreign keys
+            with db.session.begin():
+                # clear dependent tables first
+                _clear_table_and_dependents("transactions")
+                _clear_table_and_dependents("users")
+                _clear_table_and_dependents("site_settings")
 
-            for row in users:
-                u = User()
-                for k, v in row.items():
-                    setattr(u, k, v)
-                db.session.add(u)
+                for row in users:
+                    u = User()
+                    for k, v in row.items():
+                        setattr(u, k, v)
+                    db.session.add(u)
 
-            for row in settings:
-                s = SiteSetting()
-                for k, v in row.items():
-                    setattr(s, k, v)
-                db.session.add(s)
+                for row in settings:
+                    s = SiteSetting()
+                    for k, v in row.items():
+                        setattr(s, k, v)
+                    db.session.add(s)
 
-            # insert transactions via dynamic insert
-            if transactions:
-                inspector = inspect(db.engine)
-                cols = [c["name"] for c in inspector.get_columns("transactions")]
-                for row in transactions:
-                    params = {c: row.get(c) for c in cols}
-                    cols_list = ",".join(cols)
-                    vals_list = ",".join([f":{c}" for c in cols])
-                    sql = text(f"INSERT INTO transactions ({cols_list}) VALUES ({vals_list})")
-                    db.session.execute(sql, params)
+                # flush so newly added parents are visible for FK validation
+                db.session.flush()
 
-            db.session.commit()
+                # validate transactions referential integrity
+                if transactions:
+                    ok, msg = _validate_foreign_keys_for_rows("transactions", transactions)
+                    if not ok:
+                        raise Exception(msg)
+
+                    inspector = inspect(db.engine)
+                    cols = [c["name"] for c in inspector.get_columns("transactions")]
+                    for row in transactions:
+                        params = {c: row.get(c) for c in cols}
+                        cols_list = ",".join(cols)
+                        vals_list = ",".join([f":{c}" for c in cols])
+                        sql = text(f"INSERT INTO transactions ({cols_list}) VALUES ({vals_list})")
+                        db.session.execute(sql, params)
+
             flash("Backup imported successfully.", "success")
         else:
             flash("Uploaded JSON did not contain recognized backup keys.", "error")
