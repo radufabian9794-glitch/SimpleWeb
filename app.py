@@ -330,7 +330,14 @@ def _validate_foreign_keys_for_rows(table_name, rows):
 @contextmanager
 def transactional_session():
     """Context manager that begins a transaction, using a nested savepoint if one is already active."""
-    if db.session.in_transaction():
+    # Some session wrappers (e.g., scoped_session proxy) may not expose `in_transaction`.
+    try:
+        active = db.session.in_transaction()
+    except Exception:
+        # Fallback: check generic `transaction` attribute
+        active = getattr(db.session, "transaction", None) is not None
+
+    if active:
         with db.session.begin_nested():
             yield
     else:
