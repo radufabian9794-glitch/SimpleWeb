@@ -471,18 +471,18 @@ def admin_import_users():
     try:
         rows = payload if isinstance(payload, list) else payload.get("users", [])
         SessionLocal = sessionmaker(bind=db.engine)
-        session = SessionLocal()
+        db_sess = SessionLocal()
         try:
-            with session.begin():
-                _clear_table_and_dependents_session("users", session)
+            with db_sess.begin():
+                _clear_table_and_dependents_session("users", db_sess)
                 for row in rows:
                     u = User()
                     for k, v in row.items():
                         setattr(u, k, v)
-                    session.add(u)
+                    db_sess.add(u)
             flash("Users imported successfully.", "success")
         finally:
-            session.close()
+            db_sess.close()
     except Exception as e:
         flash(f"Failed to import users: {e}", "error")
 
@@ -533,18 +533,18 @@ def admin_import_site_settings():
     try:
         rows = payload if isinstance(payload, list) else payload.get("site_settings", [])
         SessionLocal = sessionmaker(bind=db.engine)
-        session = SessionLocal()
+        db_sess = SessionLocal()
         try:
-            with session.begin():
-                _clear_table_and_dependents_session("site_settings", session)
+            with db_sess.begin():
+                _clear_table_and_dependents_session("site_settings", db_sess)
                 for row in rows:
                     s = SiteSetting()
                     for k, v in row.items():
                         setattr(s, k, v)
-                    session.add(s)
+                    db_sess.add(s)
             flash("Site settings imported successfully.", "success")
         finally:
-            session.close()
+            db_sess.close()
     except Exception as e:
         flash(f"Failed to import site settings: {e}", "error")
 
@@ -658,32 +658,32 @@ def admin_backup_import():
             # Clear dependent tables then parents
             # perform imports inside one transaction and validate foreign keys
             SessionLocal = sessionmaker(bind=db.engine)
-            session = SessionLocal()
+            db_sess = SessionLocal()
             try:
-                with session.begin():
+                with db_sess.begin():
                     # clear dependent tables first
-                    _clear_table_and_dependents_session("transactions", session)
-                    _clear_table_and_dependents_session("users", session)
-                    _clear_table_and_dependents_session("site_settings", session)
+                    _clear_table_and_dependents_session("transactions", db_sess)
+                    _clear_table_and_dependents_session("users", db_sess)
+                    _clear_table_and_dependents_session("site_settings", db_sess)
 
                     for row in users:
                         u = User()
                         for k, v in row.items():
                             setattr(u, k, v)
-                        session.add(u)
+                        db_sess.add(u)
 
                     for row in settings:
                         s = SiteSetting()
                         for k, v in row.items():
                             setattr(s, k, v)
-                        session.add(s)
+                        db_sess.add(s)
 
                     # flush so newly added parents are visible for FK validation
-                    session.flush()
+                    db_sess.flush()
 
                     # validate transactions referential integrity
                     if transactions:
-                        ok, msg = _validate_foreign_keys_for_rows_session("transactions", transactions, session)
+                        ok, msg = _validate_foreign_keys_for_rows_session("transactions", transactions, db_sess)
                         if not ok:
                             raise Exception(msg)
 
@@ -694,11 +694,11 @@ def admin_backup_import():
                             cols_list = ",".join(cols)
                             vals_list = ",".join([f":{c}" for c in cols])
                             sql = text(f"INSERT INTO transactions ({cols_list}) VALUES ({vals_list})")
-                            session.execute(sql, params)
+                            db_sess.execute(sql, params)
 
                 flash("Backup imported successfully.", "success")
             finally:
-                session.close()
+                db_sess.close()
         else:
             flash("Uploaded JSON did not contain recognized backup keys.", "error")
     except Exception as e:
