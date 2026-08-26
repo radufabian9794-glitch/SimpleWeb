@@ -268,6 +268,23 @@ def _serialize_model_rows(model):
         result.append(row)
     return result
 
+def _clear_table_and_dependents(table_name):
+    inspector = inspect(db.engine)
+    # First, delete rows from tables that reference this table via foreign keys
+    for t in inspector.get_table_names():
+        try:
+            fks = inspector.get_foreign_keys(t)
+        except Exception:
+            fks = []
+        for fk in fks:
+            referred = fk.get("referred_table")
+            if referred == table_name:
+                db.session.execute(text(f"DELETE FROM {t}"))
+
+    # Then delete from the requested table
+    db.session.execute(text(f"DELETE FROM {table_name}"))
+    db.session.commit()
+
 
 @app.route("/admin/backup/export")
 def admin_backup_export():
