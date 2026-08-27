@@ -1,7 +1,8 @@
 import os
+import flask
 import json
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, session, Response
+from flask import Flask, render_template, request, redirect, url_for, flash, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect, text
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -83,7 +84,7 @@ def maintenance_enabled():
 @app.context_processor
 def inject_user_context():
     return {
-        "is_admin": bool(session.get("user_admin", 0)),
+        "is_admin": bool(flask.session.get("user_admin", 0)),
         "registration_enabled": registration_enabled(),
         "login_enabled": login_enabled(),
         "maintenance_enabled": maintenance_enabled(),
@@ -107,7 +108,7 @@ def enforce_maintenance():
     if request.path == "/login" and request.method == "POST":
         return None
 
-    if bool(session.get("user_admin", 0)):
+    if bool(flask.session.get("user_admin", 0)):
         return None
 
     return redirect(url_for("maintenance_page"))
@@ -115,9 +116,9 @@ def enforce_maintenance():
 
 @app.route("/")
 def home():
-    if "user_id" in session:
+    if "user_id" in flask.session:
         #flash("You are already logged in.(code: 001)", "success")
-        return render_template("index.html", title=site_title, name=session["user_name"])
+        return render_template("index.html", title=site_title, name=flask.session["user_name"])
     #flash("You are not logged in.", "error")
     return render_template("index.html", title=site_title)
  
@@ -127,9 +128,9 @@ def auth():
     if maintenance_enabled():
         flash("The site is currently under maintenance. Please try again later.", "error")
         return redirect(url_for("maintenance_page"))
-    if "user_id" in session:
+    if "user_id" in flask.session:
         flash("You are already logged in.(code: 002)", "success")
-        return render_template("dashboard.html", name=session["user_name"] )
+        return render_template("dashboard.html", name=flask.session["user_name"] )
     return render_template(
         "auth.html",
         title=site_title,
@@ -169,9 +170,9 @@ def register():
     db.session.add(user)
     db.session.commit()
  
-    session["user_id"] = user.id
-    session["user_name"] = user.name
-    session["user_admin"] = user.admin
+    flask.session["user_id"] = user.id
+    flask.session["user_name"] = user.name
+    flask.session["user_admin"] = user.admin
  
     flash(f"Welcome, {user.name}! Your account has been created.", "success")
     return redirect(url_for("dashboard"))
@@ -206,9 +207,9 @@ def login():
             login_enabled=login_enabled(),
         )
  
-    session["user_id"] = user.id
-    session["user_name"] = user.name
-    session["user_admin"] = user.admin
+    flask.session["user_id"] = user.id
+    flask.session["user_name"] = user.name
+    flask.session["user_admin"] = user.admin
  
     flash(f"Welcome back, {user.name}!", "success")
     return redirect(url_for("dashboard"))
@@ -216,24 +217,24 @@ def login():
  
 @app.route("/logout")
 def logout():
-    session.clear()
+    flask.session.clear()
     return redirect(url_for("home"))
  
  
 @app.route("/dashboard")
 def dashboard():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-    return render_template("dashboard.html", title=site_title, name=session["user_name"] )
+    return render_template("dashboard.html", title=site_title, name=flask.session["user_name"] )
 
 @app.route("/admin", methods=["GET", "POST"])
 def admin_page():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
 
-    user = User.query.get(session["user_id"])
+    user = User.query.get(flask.session["user_id"])
     if not user or user.admin != 1:
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
@@ -398,11 +399,11 @@ def transactional_session():
 
 @app.route("/admin/backup/export")
 def admin_backup_export():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
 
-    current_user = User.query.get(session["user_id"])
+    current_user = User.query.get(flask.session["user_id"])
     if not current_user or current_user.admin != 1:
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
@@ -429,10 +430,10 @@ def admin_backup_export():
 
 @app.route("/admin/backup/export/users")
 def admin_export_users():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-    current_user = User.query.get(session["user_id"])
+    current_user = User.query.get(flask.session["user_id"])
     if not current_user or current_user.admin != 1:
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
@@ -449,10 +450,10 @@ def admin_export_users():
 
 @app.route("/admin/backup/import/users", methods=["POST"])
 def admin_import_users():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-    current_user = User.query.get(session["user_id"])
+    current_user = User.query.get(flask.session["user_id"])
     if not current_user or current_user.admin != 1:
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
@@ -491,10 +492,10 @@ def admin_import_users():
 
 @app.route("/admin/backup/export/site_settings")
 def admin_export_site_settings():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-    current_user = User.query.get(session["user_id"])
+    current_user = User.query.get(flask.session["user_id"])
     if not current_user or current_user.admin != 1:
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
@@ -511,10 +512,10 @@ def admin_export_site_settings():
 
 @app.route("/admin/backup/import/site_settings", methods=["POST"])
 def admin_import_site_settings():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-    current_user = User.query.get(session["user_id"])
+    current_user = User.query.get(flask.session["user_id"])
     if not current_user or current_user.admin != 1:
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
@@ -553,10 +554,10 @@ def admin_import_site_settings():
 
 @app.route("/admin/backup/export/transactions")
 def admin_export_transactions():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-    current_user = User.query.get(session["user_id"])
+    current_user = User.query.get(flask.session["user_id"])
     if not current_user or current_user.admin != 1:
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
@@ -576,10 +577,10 @@ def admin_export_transactions():
 
 @app.route("/admin/backup/import/transactions", methods=["POST"])
 def admin_import_transactions():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-    current_user = User.query.get(session["user_id"])
+    current_user = User.query.get(flask.session["user_id"])
     if not current_user or current_user.admin != 1:
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
@@ -628,11 +629,11 @@ def admin_import_transactions():
 
 @app.route("/admin/backup/import", methods=["POST"])
 def admin_backup_import():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-
-    current_user = User.query.get(session["user_id"])
+    
+    current_user = User.query.get(flask.session["user_id"])
     if not current_user or current_user.admin != 1:
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
@@ -710,11 +711,11 @@ def admin_backup_import():
 
 @app.route("/admin/users")
 def admin_user_management():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-
-    current_user = User.query.get(session["user_id"])
+    
+    current_user = User.query.get(flask.session["user_id"])
     if not current_user or current_user.admin != 1:
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
@@ -730,11 +731,11 @@ def admin_user_management():
 
 @app.route("/admin/users/<int:user_id>/change-password", methods=["GET", "POST"])
 def admin_user_change_password(user_id):
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-
-    current_user = User.query.get(session["user_id"])
+    
+    current_user = User.query.get(flask.session["user_id"])
     if not current_user or current_user.admin != 1:
         flash("You do not have permission to access the admin area.", "error")
         return redirect(url_for("dashboard"))
@@ -789,10 +790,10 @@ def maintenance_page():
 
 @app.route("/profile")
 def profile():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
-    user = User.query.get(session["user_id"])
+    user = User.query.get(flask.session["user_id"])
     if not user:
         flash("User not found.", "error")
         return redirect(url_for("auth"))
@@ -800,7 +801,7 @@ def profile():
 
 @app.route("/profile/change-password", methods=["POST"])
 def change_password():
-    if "user_id" not in session:
+    if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
         return redirect(url_for("auth"))
 
@@ -808,7 +809,7 @@ def change_password():
     new_password = request.form.get("new_password", "")
     confirm_password = request.form.get("confirm_password", "")
 
-    user = User.query.get(session["user_id"])
+    user = User.query.get(flask.session["user_id"])
     if not user:
         flash("User not found.", "error")
         return redirect(url_for("auth"))
@@ -833,15 +834,15 @@ def change_password():
  
 @app.route('/privacy')
 def privacy():
-    if "user_id" in session:
+    if "user_id" in flask.session:
         #flash("You are already logged in.(code: 001)", "success")
-        return render_template("privacy.html", title=site_title, site_email_privacy=site_email_privacy, name=session["user_name"] )
+        return render_template("privacy.html", title=site_title, site_email_privacy=site_email_privacy, name=flask.session["user_name"] )
     return render_template('privacy.html', title=site_title , site_email_privacy=site_email_privacy)
 
 @app.route('/terms')
 def terms():
-    if "user_id" in session:
-        return render_template('terms.html', title=site_title , site_email_info=site_email_info, name=session["user_name"] )
+    if "user_id" in flask.session:
+        return render_template('terms.html', title=site_title , site_email_info=site_email_info, name=flask.session["user_name"] )
     return render_template('terms.html', title=site_title , site_email_info=site_email_info)
 
 @app.route('/contact', methods=['GET', 'POST'])
@@ -850,8 +851,8 @@ def contact():
         # Handle form submission here
         pass
     
-    if "user_id" in session:
-        return render_template('contact.html', title=site_title , site_email_info=site_email_info, name=session["user_name"] )
+    if "user_id" in flask.session:
+        return render_template('contact.html', title=site_title , site_email_info=site_email_info, name=flask.session["user_name"] )
     return render_template('contact.html', title=site_title , site_email_info=site_email_info)
 # ── DB init ──────────────────────────────────────────────
 def ensure_admin_column():
