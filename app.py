@@ -550,66 +550,6 @@ def admin_import_site_settings():
 
     return redirect(url_for("admin_page"))
 
-"""
-# TO be removed in future versions, use the more specific import routes above instead
-@app.route("/admin/backup/import", methods=["POST"])
-def admin_backup_import():
-    if "user_id" not in flask.session:
-        flash("Please sign in to continue.", "error")
-        return redirect(url_for("auth"))
-    
-    current_user = User.query.get(flask.session["user_id"])
-    if not current_user or current_user.admin != 1:
-        flash("You do not have permission to access the admin area.", "error")
-        return redirect(url_for("dashboard"))
-
-    f = request.files.get("backup_file")
-    if not f:
-        flash("No backup file uploaded.", "error")
-        return redirect(url_for("admin_page"))
-
-    try:
-        payload = json.load(f)
-    except Exception:
-        flash("Uploaded file is not valid JSON.", "error")
-        return redirect(url_for("admin_page"))
-
-    try:
-        # If the uploaded JSON is the full backup object (users/site_settings), accept that
-        if isinstance(payload, dict) and ("users" in payload or "site_settings" in payload):
-            users = payload.get("users", [])
-            settings = payload.get("site_settings", [])
-
-            SessionLocal = sessionmaker(bind=db.engine)
-            db_sess = SessionLocal()
-            try:
-                with db_sess.begin():
-                    _clear_table_and_dependents_session("users", db_sess)
-                    _clear_table_and_dependents_session("site_settings", db_sess)
-
-                    for row in users:
-                        u = User()
-                        for k, v in row.items():
-                            setattr(u, k, v)
-                        db_sess.add(u)
-
-                    for row in settings:
-                        s = SiteSetting()
-                        for k, v in row.items():
-                            setattr(s, k, v)
-                        db_sess.add(s)
-
-                flash("Backup imported successfully.", "success")
-            finally:
-                db_sess.close()
-        else:
-            flash("Uploaded JSON did not contain recognized backup keys.", "error")
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Failed to import backup: {e}", "error")
-
-    return redirect(url_for("admin_page"))
-"""
 
 @app.route("/admin/users")
 def admin_user_management():
