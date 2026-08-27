@@ -502,7 +502,7 @@ def admin_export_site_settings():
     try:
         data = json.dumps(_serialize_model_rows(SiteSetting), indent=2)
         filename = f"site-settings-backup-{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
-        flash("Site settings export ready.", "success")
+        flash("Site settings export ready.", "success") # BUG; The message does not appe ar in the UI because the download starts immediately.
         return Response(data, mimetype="application/json", headers={"Content-Disposition": f"attachment;filename={filename}"})
     except Exception as e:
         flash(f"Failed to export site settings: {e}", "error")
