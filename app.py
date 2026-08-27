@@ -287,7 +287,7 @@ def _clear_table_and_dependents(table_name):
 
     # Then delete from the requested table
     db.session.execute(text(f"DELETE FROM {table_name}"))
-    # NOTE: do not commit here; caller should manage transaction scope to avoid nested transactions
+    # NOTE: do not commit here; caller should manage the savepoint scope to avoid nested writes
 
 
 def _clear_table_and_dependents_session(table_name, session):
@@ -412,7 +412,6 @@ def admin_backup_export():
         backup = {
             "users": _serialize_model_rows(User),
             "site_settings": _serialize_model_rows(SiteSetting),
-            "transactions": _serialize_table_by_name("transactions") if inspect(db.engine).has_table("transactions") else [],
         }
 
         data = json.dumps(backup, indent=2)
@@ -552,81 +551,6 @@ def admin_import_site_settings():
     return redirect(url_for("admin_page"))
 
 
-@app.route("/admin/backup/export/transactions")
-def admin_export_transactions():
-    if "user_id" not in flask.session:
-        flash("Please sign in to continue.", "error")
-        return redirect(url_for("auth"))
-    current_user = User.query.get(flask.session["user_id"])
-    if not current_user or current_user.admin != 1:
-        flash("You do not have permission to access the admin area.", "error")
-        return redirect(url_for("dashboard"))
-
-    try:
-        if not inspect(db.engine).has_table("transactions"):
-            flash("No transactions table present.", "error")
-            return redirect(url_for("admin_page"))
-        data = json.dumps(_serialize_table_by_name("transactions"), indent=2)
-        filename = f"transactions-backup-{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
-        flash("Transactions export ready.", "success")
-        return Response(data, mimetype="application/json", headers={"Content-Disposition": f"attachment;filename={filename}"})
-    except Exception as e:
-        flash(f"Failed to export transactions: {e}", "error")
-        return redirect(url_for("admin_page"))
-
-
-@app.route("/admin/backup/import/transactions", methods=["POST"])
-def admin_import_transactions():
-    if "user_id" not in flask.session:
-        flash("Please sign in to continue.", "error")
-        return redirect(url_for("auth"))
-    current_user = User.query.get(flask.session["user_id"])
-    if not current_user or current_user.admin != 1:
-        flash("You do not have permission to access the admin area.", "error")
-        return redirect(url_for("dashboard"))
-
-    if not inspect(db.engine).has_table("transactions"):
-        flash("No transactions table present.", "error")
-        return redirect(url_for("admin_page"))
-
-    f = request.files.get("backup_file")
-    if not f:
-        flash("No backup file uploaded.", "error")
-        return redirect(url_for("admin_page"))
-
-    try:
-        payload = json.load(f)
-    except Exception:
-        flash("Uploaded file is not valid JSON.", "error")
-        return redirect(url_for("admin_page"))
-
-    try:
-        rows = payload if isinstance(payload, list) else payload.get("transactions", [])
-
-        # Validate foreign keys first (e.g., user_id references users.id)
-        ok, msg = _validate_foreign_keys_for_rows("transactions", rows)
-        if not ok:
-            flash(f"Failed to import transactions: {msg}", "error")
-            return redirect(url_for("admin_page"))
-
-        with transactional_session():
-            _clear_table_and_dependents("transactions")
-            inspector = inspect(db.engine)
-            cols = [c["name"] for c in inspector.get_columns("transactions")]
-            for row in rows:
-                params = {c: row.get(c) for c in cols}
-                cols_list = ",".join(cols)
-                vals_list = ",".join([f":{c}" for c in cols])
-                sql = text(f"INSERT INTO transactions ({cols_list}) VALUES ({vals_list})")
-                db.session.execute(sql, params)
-
-        flash("Transactions imported successfully.", "success")
-    except Exception as e:
-        flash(f"Failed to import transactions: {e}", "error")
-
-    return redirect(url_for("admin_page"))
-
-
 @app.route("/admin/backup/import", methods=["POST"])
 def admin_backup_import():
     if "user_id" not in flask.session:
@@ -650,20 +574,15 @@ def admin_backup_import():
         return redirect(url_for("admin_page"))
 
     try:
-        # If the uploaded JSON is the full backup object (users/site_settings/transactions), accept that
-        if isinstance(payload, dict) and ("users" in payload or "site_settings" in payload or "transactions" in payload):
+        # If the uploaded JSON is the full backup object (users/site_settings), accept that
+        if isinstance(payload, dict) and ("users" in payload or "site_settings" in payload):
             users = payload.get("users", [])
             settings = payload.get("site_settings", [])
-            transactions = payload.get("transactions", [])
 
-            # Clear dependent tables then parents
-            # perform imports inside one transaction and validate foreign keys
             SessionLocal = sessionmaker(bind=db.engine)
             db_sess = SessionLocal()
             try:
                 with db_sess.begin():
-                    # clear dependent tables first
-                    _clear_table_and_dependents_session("transactions", db_sess)
                     _clear_table_and_dependents_session("users", db_sess)
                     _clear_table_and_dependents_session("site_settings", db_sess)
 
@@ -678,24 +597,6 @@ def admin_backup_import():
                         for k, v in row.items():
                             setattr(s, k, v)
                         db_sess.add(s)
-
-                    # flush so newly added parents are visible for FK validation
-                    db_sess.flush()
-
-                    # validate transactions referential integrity
-                    if transactions:
-                        ok, msg = _validate_foreign_keys_for_rows_session("transactions", transactions, db_sess)
-                        if not ok:
-                            raise Exception(msg)
-
-                        inspector = inspect(db.engine)
-                        cols = [c["name"] for c in inspector.get_columns("transactions")]
-                        for row in transactions:
-                            params = {c: row.get(c) for c in cols}
-                            cols_list = ",".join(cols)
-                            vals_list = ",".join([f":{c}" for c in cols])
-                            sql = text(f"INSERT INTO transactions ({cols_list}) VALUES ({vals_list})")
-                            db_sess.execute(sql, params)
 
                 flash("Backup imported successfully.", "success")
             finally:
