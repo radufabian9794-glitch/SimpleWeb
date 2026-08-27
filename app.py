@@ -34,6 +34,7 @@ class User(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     admin = db.Column(db.Integer, default=0, nullable=False)
+    theme_mode = db.Column(db.String(16), nullable=False, default="light")
  
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -77,17 +78,39 @@ def login_enabled():
     return get_setting("login_enabled", "1") == "1"
 
 
+def normalize_theme_mode(value):
+    return value if value in {"light", "dark"} else "light"
+
+
 def maintenance_enabled():
     return get_setting("maintenance_mode", "0") == "1"
 
 
+def get_user_theme_mode(user=None):
+    if user is not None and getattr(user, "theme_mode", None):
+        return normalize_theme_mode(user.theme_mode)
+    if "user_theme" in flask.session:
+        return normalize_theme_mode(flask.session["user_theme"])
+    return "light"
+
+
 @app.context_processor
 def inject_user_context():
+    user = None
+    user_id = flask.session.get("user_id")
+    if user_id is not None:
+        user = User.query.get(user_id)
+
+    theme_mode = get_user_theme_mode(user)
+    if user is not None:
+        flask.session["user_theme"] = theme_mode
+
     return {
         "is_admin": bool(flask.session.get("user_admin", 0)),
         "registration_enabled": registration_enabled(),
         "login_enabled": login_enabled(),
         "maintenance_enabled": maintenance_enabled(),
+        "theme_mode": theme_mode,
     }
 
 
@@ -173,6 +196,7 @@ def register():
     flask.session["user_id"] = user.id
     flask.session["user_name"] = user.name
     flask.session["user_admin"] = user.admin
+    flask.session["user_theme"] = get_user_theme_mode(user)
  
     flash(f"Welcome, {user.name}! Your account has been created.", "success")
     return redirect(url_for("dashboard"))
@@ -210,6 +234,7 @@ def login():
     flask.session["user_id"] = user.id
     flask.session["user_name"] = user.name
     flask.session["user_admin"] = user.admin
+    flask.session["user_theme"] = get_user_theme_mode(user)
  
     flash(f"Welcome back, {user.name}!", "success")
     return redirect(url_for("dashboard"))
@@ -639,7 +664,27 @@ def profile():
     if not user:
         flash("User not found.", "error")
         return redirect(url_for("auth"))
-    return render_template("profile.html", title=site_title, name=user.name, email=user.email )
+    return render_template("profile.html", title=site_title, name=user.name, email=user.email, theme_mode=get_user_theme_mode(user))
+
+
+@app.route("/profile/theme", methods=["POST"])
+def update_theme():
+    if "user_id" not in flask.session:
+        flash("Please sign in to continue.", "error")
+        return redirect(url_for("auth"))
+
+    user = User.query.get(flask.session["user_id"])
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for("auth"))
+
+    theme = normalize_theme_mode(request.form.get("theme_mode", "light"))
+    user.theme_mode = theme
+    db.session.commit()
+    flask.session["user_theme"] = theme
+    flash("Theme preference updated successfully.", "success")
+    return redirect(url_for("profile"))
+
 
 @app.route("/profile/change-password", methods=["POST"])
 def change_password():
@@ -719,10 +764,23 @@ def ensure_site_settings():
             db.session.add(SiteSetting(key=key, value=default))
     db.session.commit()
 
+
+def ensure_user_theme_column():
+    inspector = inspect(db.engine)
+    if not inspector.has_table("users"):
+        db.create_all()
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("users")}
+    if "theme_mode" not in columns:
+        db.session.execute(text("ALTER TABLE users ADD COLUMN theme_mode VARCHAR(16) NOT NULL DEFAULT 'light'"))
+        db.session.commit()
+
 with app.app_context():
     db.create_all()
     ensure_admin_column()
     ensure_site_settings()
+    ensure_user_theme_column()
  
  
 if __name__ == "__main__":

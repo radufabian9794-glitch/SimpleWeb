@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 </head>
 
-<body>
+<body data-theme="{{ theme_mode }}">
 
   {% include 'navbar.html' %}
 
@@ -40,6 +40,22 @@
 
         <hr class="profile-section-divider">
 
+        <section aria-labelledby="theme-section" class="profile-theme-option">
+            <h2 id="theme-section">Appearance</h2>
+            <form method="post" action="/profile/theme">
+                <div class="profile-theme-toggle">
+                    <label for="theme_mode">Theme</label>
+                    <select id="theme_mode" name="theme_mode" aria-label="Choose theme">
+                        <option value="light" {% if theme_mode == 'light' %}selected{% endif %}>Light</option>
+                        <option value="dark" {% if theme_mode == 'dark' %}selected{% endif %}>Dark</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Save preference</button>
+            </form>
+        </section>
+
+        <hr class="profile-section-divider">
+
         <section aria-labelledby="password-section">
             <h2 id="password-section">Change password</h2>
 
@@ -65,31 +81,36 @@
 
     <script>
         (function(){
+            const currentTheme = '{{ theme_mode }}';
+            document.body.setAttribute('data-theme', currentTheme || 'light');
+
             const form = document.getElementById('password-form');
             const newPwd = document.getElementById('new_password');
             const confirmPwd = document.getElementById('confirm_password');
             const msg = document.getElementById('msg');
 
-            form.addEventListener('submit', function(e){
-                msg.textContent = '';
-                msg.className = '';
+            if (form) {
+                form.addEventListener('submit', function(e){
+                    msg.textContent = '';
+                    msg.className = '';
 
-                if (newPwd.value !== confirmPwd.value) {
-                    e.preventDefault();
-                    msg.textContent = 'New password and confirmation do not match.';
-                    msg.className = 'profile-error';
-                    confirmPwd.focus();
-                    return;
-                }
+                    if (newPwd.value !== confirmPwd.value) {
+                        e.preventDefault();
+                        msg.textContent = 'New password and confirmation do not match.';
+                        msg.className = 'profile-error';
+                        confirmPwd.focus();
+                        return;
+                    }
 
-                if (newPwd.value.length < 8) {
-                    e.preventDefault();
-                    msg.textContent = 'New password must be at least 8 characters.';
-                    msg.className = 'profile-error';
-                    newPwd.focus();
-                    return;
-                }
-            });
+                    if (newPwd.value.length < 8) {
+                        e.preventDefault();
+                        msg.textContent = 'New password must be at least 8 characters.';
+                        msg.className = 'profile-error';
+                        newPwd.focus();
+                        return;
+                    }
+                });
+            }
         })();
     </script>
   </div>
