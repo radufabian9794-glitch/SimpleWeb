@@ -489,7 +489,7 @@ def admin_import_users():
     return redirect(url_for("admin_page"))
 
 
-@app.route("/admin/backup/export/site_settings")
+@app.route("/admin/backup/export/site_settings", methods=["POST"])
 def admin_export_site_settings():
     if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
