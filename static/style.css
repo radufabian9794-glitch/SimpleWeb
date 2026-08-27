@@ -13,6 +13,13 @@
   --radius: 10px;
   --input-bg: #f7f7f7;
   --shadow: rgba(15, 23, 42, 0.12);
+  --button-bg: #111111;
+  --button-text: #ffffff;
+  --button-hover-bg: #2a2a2a;
+  --button-secondary-bg: transparent;
+  --button-secondary-text: #111111;
+  --button-secondary-border: #d8d4ce;
+  --button-secondary-hover-bg: rgba(17, 17, 17, 0.05);
   --flash-success-bg: #ecfdf5;
   --flash-success-text: #166534;
   --flash-success-border: #bbf7d0;
@@ -33,6 +40,13 @@ body[data-theme='dark'] {
   --border: #273244;
   --input-bg: #0b1220;
   --shadow: rgba(2, 6, 23, 0.56);
+  --button-bg: #e5e7eb;
+  --button-text: #0f172a;
+  --button-hover-bg: #f8fafc;
+  --button-secondary-bg: transparent;
+  --button-secondary-text: #e5e7eb;
+  --button-secondary-border: #374151;
+  --button-secondary-hover-bg: rgba(148, 163, 184, 0.12);
   --flash-success-bg: rgba(22, 101, 52, 0.18);
   --flash-success-text: #a7f3d0;
   --flash-success-border: rgba(34, 197, 94, 0.38);
@@ -141,32 +155,52 @@ img, svg {
  
 /* ── Buttons ── */
 .btn-login {
-  background: var(--ink) !important;
-  color: #fff !important;
+  background: var(--button-bg) !important;
+  color: var(--button-text) !important;
   padding: 0.55rem 1.25rem !important;
   border-radius: var(--radius) !important;
   font-size: 0.875rem !important;
   font-weight: 500 !important;
-  transition: background 0.2s !important;
+  transition: background 0.2s, color 0.2s !important;
+  border: 1px solid transparent;
 }
-.btn-login:hover { background: var(--accent-hover) !important; }
+.btn-login:hover { background: var(--button-hover-bg) !important; color: var(--button-text) !important; }
  
 .btn-primary {
   display: inline-block;
-  background: var(--ink);
-  color: #fff;
+  background: var(--button-bg);
+  color: var(--button-text);
   padding: 0.75rem 1.75rem;
   border-radius: var(--radius);
   font-family: 'DM Sans', sans-serif;
   font-size: 0.9rem;
   font-weight: 500;
   text-decoration: none;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition: background 0.2s, color 0.2s, transform 0.1s, border-color 0.2s;
 }
-.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-primary:hover { background: var(--button-hover-bg); color: var(--button-text); transform: translateY(-1px); }
 .btn-primary.full-width { display: block; width: 100%; text-align: center; padding: 0.85rem; }
+
+.btn-secondary {
+  display: inline-block;
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+  padding: 0.7rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--button-secondary-border);
+  text-decoration: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.btn-secondary:hover {
+  background: var(--button-secondary-hover-bg);
+  color: var(--button-secondary-text);
+  border-color: var(--button-secondary-border);
+}
  
 .btn-ghost {
   display: inline-block;
