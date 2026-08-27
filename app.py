@@ -550,7 +550,8 @@ def admin_import_site_settings():
 
     return redirect(url_for("admin_page"))
 
-
+"""
+# TO be removed in future versions, use the more specific import routes above instead
 @app.route("/admin/backup/import", methods=["POST"])
 def admin_backup_import():
     if "user_id" not in flask.session:
@@ -608,7 +609,7 @@ def admin_backup_import():
         flash(f"Failed to import backup: {e}", "error")
 
     return redirect(url_for("admin_page"))
-
+"""
 
 @app.route("/admin/users")
 def admin_user_management():
