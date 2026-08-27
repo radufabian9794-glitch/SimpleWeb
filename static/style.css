@@ -324,10 +324,14 @@ img, svg {
 }
  
 .cta-section .btn-primary {
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
+  border: 1px solid var(--border);
 }
-.cta-section .btn-primary:hover { background: #eee; }
+.cta-section .btn-primary:hover {
+  background: var(--button-hover-bg);
+  color: var(--button-text);
+}
  
 /* ── Footer ── */
 .footer {
@@ -777,19 +781,20 @@ img, svg {
 .profile-card .btn-primary {
   display: inline-block;
   padding: 0.55rem 0.9rem;
-  background: var(--ink);
-  color: #fff;
-  border: none;
+  background: var(--button-bg);
+  color: var(--button-text);
+  border: 1px solid transparent;
   border-radius: 4px;
   cursor: pointer;
   font-weight: 500;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.9rem;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 
 .profile-card .btn-primary:hover {
-  background: var(--accent-hover);
+  background: var(--button-hover-bg);
+  color: var(--button-text);
 }
 
 .profile-readonly {
