@@ -427,7 +427,7 @@ def admin_backup_export():
         return redirect(url_for("admin_page"))
 
 
-@app.route("/admin/backup/export/users")
+@app.route("/admin/backup/export/users", methods=["POST"])
 def admin_export_users():
     if "user_id" not in flask.session:
         flash("Please sign in to continue.", "error")
