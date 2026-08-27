@@ -56,7 +56,6 @@ services:
       - POSTGRES_PASSWORD=pass
       - POSTGRES_DB=mydb
     volumes:
-      - db_data:/var/lib/postgresql/data
       - db_data18:/var/lib/postgresql/data
     networks:
       - simple_appnet
